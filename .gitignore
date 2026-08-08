@@ -1,0 +1,13 @@
+# Runtime artefacts written by lv1_fetch.js / the ReaScript
+lv1_tracks.json
+lv1_tracks.json.tmp
+lv1_fetch.log
+.lv1_write_test
+
+# Node
+node_modules/
+npm-debug.log*
+
+# OS
+Thumbs.db
+.DS_Store

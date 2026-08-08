@@ -1,0 +1,905 @@
+{
+  "schemaVersion": 2,
+  "ok": true,
+  "mode": "fetch",
+  "error": null,
+  "errorCode": null,
+  "host": "192.168.1.40",
+  "port": 49699,
+  "deviceName": "LV1-CLASSIC",
+  "registered": true,
+  "devices": [
+    {
+      "name": "LV1-CLASSIC",
+      "host": "LV1-CLASSIC",
+      "address": "192.168.1.40",
+      "addresses": [
+        "192.168.1.40"
+      ],
+      "port": 49699,
+      "ipv6": []
+    }
+  ],
+  "ambiguous": false,
+  "discoveryError": null,
+  "fetchedAt": "2026-07-12T22:24:35.493Z",
+  "elapsedMs": 1840,
+  "channelsStride": 19,
+  "meterFrames": 6,
+  "widthGuessedCount": 0,
+  "trackCount": 109,
+  "tracks": [
+    {
+      "group": 0,
+      "ch": 0,
+      "name": "KICK IN",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#98845c"
+    },
+    {
+      "group": 0,
+      "ch": 1,
+      "name": "KICK OUT",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#98845c"
+    },
+    {
+      "group": 0,
+      "ch": 2,
+      "name": "SNARE T",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#98845c"
+    },
+    {
+      "group": 0,
+      "ch": 3,
+      "name": "SNARE B",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#98845c"
+    },
+    {
+      "group": 0,
+      "ch": 4,
+      "name": "KNEE",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#98845c"
+    },
+    {
+      "group": 0,
+      "ch": 5,
+      "name": "TOM 1",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#98845c"
+    },
+    {
+      "group": 0,
+      "ch": 6,
+      "name": "TOM 2",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#98845c"
+    },
+    {
+      "group": 0,
+      "ch": 7,
+      "name": "TOM 3",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#98845c"
+    },
+    {
+      "group": 0,
+      "ch": 8,
+      "name": "OH",
+      "stereo": true,
+      "detect": "meter",
+      "color": "#98845c"
+    },
+    {
+      "group": 0,
+      "ch": 9,
+      "name": "SPD SBASS",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#e14040"
+    },
+    {
+      "group": 0,
+      "ch": 10,
+      "name": "SPD BASS",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#e14040"
+    },
+    {
+      "group": 0,
+      "ch": 11,
+      "name": "GUIT J",
+      "stereo": true,
+      "detect": "meter",
+      "color": "#fa7b14"
+    },
+    {
+      "group": 0,
+      "ch": 12,
+      "name": "GUIT C",
+      "stereo": true,
+      "detect": "meter",
+      "color": "#fa7b14"
+    },
+    {
+      "group": 0,
+      "ch": 13,
+      "name": "VOX 1",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#ff00ff"
+    },
+    {
+      "group": 0,
+      "ch": 14,
+      "name": "VOX 2",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#ff00ff"
+    },
+    {
+      "group": 0,
+      "ch": 15,
+      "name": "VOX 3",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#ff00ff"
+    },
+    {
+      "group": 0,
+      "ch": 16,
+      "name": "PUBLIC",
+      "stereo": true,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 17,
+      "name": "Channel 18",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 18,
+      "name": "Channel 19",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 19,
+      "name": "Channel 20",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 20,
+      "name": "Channel 21",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 21,
+      "name": "Channel 22",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 22,
+      "name": "Channel 23",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 23,
+      "name": "Channel 24",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 24,
+      "name": "Channel 25",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 25,
+      "name": "Channel 26",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 26,
+      "name": "Channel 27",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 27,
+      "name": "Channel 28",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 28,
+      "name": "Channel 29",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 29,
+      "name": "Channel 30",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 30,
+      "name": "Channel 31",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 31,
+      "name": "PC",
+      "stereo": true,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 32,
+      "name": "Channel 33",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 33,
+      "name": "Channel 34",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 34,
+      "name": "Channel 35",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 35,
+      "name": "Channel 36",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 36,
+      "name": "Channel 37",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 37,
+      "name": "Channel 38",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 38,
+      "name": "Channel 39",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 39,
+      "name": "Channel 40",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 40,
+      "name": "Channel 41",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 41,
+      "name": "Channel 42",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 42,
+      "name": "Channel 43",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 43,
+      "name": "Channel 44",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 44,
+      "name": "Channel 45",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 45,
+      "name": "Channel 46",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 46,
+      "name": "Channel 47",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 47,
+      "name": "Channel 48",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 48,
+      "name": "Channel 49",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 49,
+      "name": "Channel 50",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 50,
+      "name": "Channel 51",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 51,
+      "name": "Channel 52",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 52,
+      "name": "Channel 53",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 53,
+      "name": "Channel 54",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 54,
+      "name": "Channel 55",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 55,
+      "name": "Channel 56",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 56,
+      "name": "Channel 57",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 57,
+      "name": "Channel 58",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 58,
+      "name": "Channel 59",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 59,
+      "name": "Channel 60",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 60,
+      "name": "Channel 61",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 61,
+      "name": "Channel 62",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 62,
+      "name": "Channel 63",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 0,
+      "ch": 63,
+      "name": "Channel 64",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#0fa2ab"
+    },
+    {
+      "group": 1,
+      "ch": 0,
+      "name": "DRUMS",
+      "stereo": true,
+      "detect": "meter",
+      "color": "#98845c"
+    },
+    {
+      "group": 1,
+      "ch": 1,
+      "name": "DRUMS S",
+      "stereo": true,
+      "detect": "meter",
+      "color": "#98845c"
+    },
+    {
+      "group": 1,
+      "ch": 2,
+      "name": "DRUMS BUS",
+      "stereo": true,
+      "detect": "meter",
+      "color": "#98845c"
+    },
+    {
+      "group": 1,
+      "ch": 3,
+      "name": "GUITS",
+      "stereo": true,
+      "detect": "meter",
+      "color": "#fa7b14"
+    },
+    {
+      "group": 1,
+      "ch": 4,
+      "name": "Group 5",
+      "stereo": true,
+      "detect": "meter",
+      "color": "#136a84"
+    },
+    {
+      "group": 1,
+      "ch": 5,
+      "name": "Group 6",
+      "stereo": true,
+      "detect": "meter",
+      "color": "#136a84"
+    },
+    {
+      "group": 1,
+      "ch": 6,
+      "name": "VOX",
+      "stereo": true,
+      "detect": "meter",
+      "color": "#ff00ff"
+    },
+    {
+      "group": 1,
+      "ch": 7,
+      "name": "BAND",
+      "stereo": true,
+      "detect": "meter",
+      "color": "#6455af"
+    },
+    {
+      "group": 2,
+      "ch": 0,
+      "name": "DRUM ROOM",
+      "stereo": true,
+      "detect": "meter",
+      "color": "#61ac61"
+    },
+    {
+      "group": 2,
+      "ch": 1,
+      "name": "DRUM PLATE",
+      "stereo": true,
+      "detect": "meter",
+      "color": "#61ac61"
+    },
+    {
+      "group": 2,
+      "ch": 2,
+      "name": "Fx 3",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#61ac61"
+    },
+    {
+      "group": 2,
+      "ch": 3,
+      "name": "GUIT ROOM",
+      "stereo": true,
+      "detect": "meter",
+      "color": "#61ac61"
+    },
+    {
+      "group": 2,
+      "ch": 4,
+      "name": "VX ROOM",
+      "stereo": true,
+      "detect": "meter",
+      "color": "#61ac61"
+    },
+    {
+      "group": 2,
+      "ch": 5,
+      "name": "VX PLATE",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#61ac61"
+    },
+    {
+      "group": 2,
+      "ch": 6,
+      "name": "VX SLAP",
+      "stereo": true,
+      "detect": "meter",
+      "color": "#61ac61"
+    },
+    {
+      "group": 2,
+      "ch": 7,
+      "name": "Fx 8",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#61ac61"
+    },
+    {
+      "group": 2,
+      "ch": 8,
+      "name": "Mon 1",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#1a8e66"
+    },
+    {
+      "group": 2,
+      "ch": 9,
+      "name": "Mon 2",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#1a8e66"
+    },
+    {
+      "group": 2,
+      "ch": 10,
+      "name": "Mon 3",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#1a8e66"
+    },
+    {
+      "group": 2,
+      "ch": 11,
+      "name": "Mon 4",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#1a8e66"
+    },
+    {
+      "group": 2,
+      "ch": 12,
+      "name": "Mon 5",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#1a8e66"
+    },
+    {
+      "group": 2,
+      "ch": 13,
+      "name": "Mon 6",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#1a8e66"
+    },
+    {
+      "group": 2,
+      "ch": 14,
+      "name": "Mon 7",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#1a8e66"
+    },
+    {
+      "group": 2,
+      "ch": 15,
+      "name": "Mon 8",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#1a8e66"
+    },
+    {
+      "group": 2,
+      "ch": 16,
+      "name": "Mon 9",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#1a8e66"
+    },
+    {
+      "group": 2,
+      "ch": 17,
+      "name": "Mon 10",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#1a8e66"
+    },
+    {
+      "group": 2,
+      "ch": 18,
+      "name": "Mon 11",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#1a8e66"
+    },
+    {
+      "group": 2,
+      "ch": 19,
+      "name": "Mon 12",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#1a8e66"
+    },
+    {
+      "group": 2,
+      "ch": 20,
+      "name": "Mon 13",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#1a8e66"
+    },
+    {
+      "group": 2,
+      "ch": 21,
+      "name": "Mon 14",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#1a8e66"
+    },
+    {
+      "group": 2,
+      "ch": 22,
+      "name": "Mon 15",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#1a8e66"
+    },
+    {
+      "group": 2,
+      "ch": 23,
+      "name": "Mon 16",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#1a8e66"
+    },
+    {
+      "group": 3,
+      "ch": 0,
+      "name": "LR",
+      "stereo": true,
+      "detect": "bus",
+      "color": "#5e98a0"
+    },
+    {
+      "group": 4,
+      "ch": 0,
+      "name": "Center",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#5e98a0"
+    },
+    {
+      "group": 5,
+      "ch": 0,
+      "name": "Mono",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#5e98a0"
+    },
+    {
+      "group": 6,
+      "ch": 0,
+      "name": "Matrix 1",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#5e98a0"
+    },
+    {
+      "group": 6,
+      "ch": 1,
+      "name": "Matrix 2",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#5e98a0"
+    },
+    {
+      "group": 6,
+      "ch": 2,
+      "name": "Matrix 3",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#5e98a0"
+    },
+    {
+      "group": 6,
+      "ch": 3,
+      "name": "Matrix 4",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#5e98a0"
+    },
+    {
+      "group": 6,
+      "ch": 4,
+      "name": "Matrix 5",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#5e98a0"
+    },
+    {
+      "group": 6,
+      "ch": 5,
+      "name": "Matrix 6",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#5e98a0"
+    },
+    {
+      "group": 6,
+      "ch": 6,
+      "name": "Matrix 7",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#5e98a0"
+    },
+    {
+      "group": 6,
+      "ch": 7,
+      "name": "Matrix 8",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#5e98a0"
+    },
+    {
+      "group": 7,
+      "ch": 0,
+      "name": "Cue",
+      "stereo": true,
+      "detect": "meter",
+      "color": "#5e98a0"
+    },
+    {
+      "group": 8,
+      "ch": 0,
+      "name": "Talk Back",
+      "stereo": false,
+      "detect": "meter",
+      "color": "#5e98a0"
+    }
+  ]
+}

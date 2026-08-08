@@ -1,0 +1,27 @@
+{
+  "name": "lv1-reaper",
+  "version": "2.0.0",
+  "description": "Import a Waves LV1 mixer's track list (name, mono/stereo, color) into REAPER",
+  "license": "MIT",
+  "author": "Malik MALASSIS",
+  "private": true,
+  "main": "lv1_fetch.js",
+  "files": [
+    "lv1_fetch.js",
+    "LV1_Track_Importer.lua",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test",
+    "scan": "node lv1_fetch.js --scan --verbose",
+    "fetch": "node lv1_fetch.js --verbose",
+    "mock": "node lv1_fetch.js --mock test/fixtures/lv1_tracks.sample.json --verbose",
+    "deploy": "powershell -ExecutionPolicy Bypass -File ./deploy.ps1"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

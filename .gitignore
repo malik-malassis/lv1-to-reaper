@@ -11,3 +11,6 @@ npm-debug.log*
 # OS
 Thumbs.db
 .DS_Store
+
+# Local editor configuration
+.vscode/

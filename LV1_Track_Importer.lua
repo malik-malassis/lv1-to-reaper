@@ -1,10 +1,8 @@
 -- @description LV1 Track Importer - connect to a Waves LV1 mixer and create Reaper tracks
 -- @author Malik MALASSIS - @malik_biendebout
--- @version 2.0
+-- @version 2.1.0
 -- @provides
 --   lv1_fetch.js
--- @links
---   Repository https://github.com/malikmalassis/lv1-reaper
 -- @about
 --   # LV1 Track Importer
 --
@@ -14,6 +12,13 @@
 --
 --   Requires ReaImGui (cfillion) and Node.js on PATH.
 -- @changelog
+--   2.1.0
+--   - Track creation and update can no longer leave REAPER's UI refresh
+--     disabled or an undo block open if they fail partway through.
+--   - Shift-click a checkbox to select a range of tracks.
+--   - Warns when the selection needs more hardware inputs than the audio
+--     device actually provides.
+--   - Replayed capture files (--mock) are now flagged in the window.
 --   2.0
 --   - Rebuilt UI: header status bar, device sidebar, group filters, search,
 --     live record-input preview, sticky action footer.
@@ -409,6 +414,8 @@ local searchText = ""
 local activeSection = nil  -- nil = no filter, otherwise a SECTIONS entry id
 local showSettings = false
 local lastResult = nil     -- the raw decoded JSON of the last successful read
+local isMockData = false   -- the list came from --mock, not from a live console
+local lastClickedKey = nil -- anchor row for shift-click range selection
 
 -- Background job (fetch or scan). REAPER's UI stays responsive: the Node
 -- helper is launched detached and we poll its output files from the defer loop.
@@ -654,6 +661,10 @@ applyResult = function(kind, blocking)
 	end
 
 	lastResult = data
+	-- Building a whole live session out of a replayed capture without noticing
+	-- is the kind of mistake you only discover at soundcheck, so this is
+	-- surfaced as a banner rather than buried in the diagnostics.
+	isMockData = (data.mock == true)
 	if type(data.devices) == "table" then devices = data.devices end
 	mergeSavedDevice()
 
@@ -849,6 +860,26 @@ local function labelFor(t, index, padWidth)
 	return string.format("%0" .. padWidth .. "d %s", index, base)
 end
 
+-- PreventUIRefresh is a counter and Undo_BeginBlock opens a project-wide block:
+-- if the body between them throws, REAPER stops refreshing its track list and
+-- arrange view for the rest of the session and the undo block never closes —
+-- with nothing on screen to explain it, since the caller runs inside the
+-- per-frame pcall that swallows the error. So the body is always guarded and
+-- the closers always run.
+local function inUndoBlock(label, body)
+	reaper.PreventUIRefresh(1)
+	reaper.Undo_BeginBlock()
+	local ok, err = pcall(body)
+	reaper.Undo_EndBlock(label, -1)
+	reaper.PreventUIRefresh(-1)
+	reaper.TrackList_AdjustWindows(false)
+	reaper.UpdateArrange()
+	if not ok then
+		reaper.ShowConsoleMsg("LV1 Track Importer: \"" .. label .. "\" failed: " .. tostring(err) .. "\n")
+	end
+	return ok, err
+end
+
 local function createSelectedTracks()
 	local selected = selectedTracksInOrder()
 	if #selected == 0 then
@@ -866,9 +897,6 @@ local function createSelectedTracks()
 	local n = 0
 	local folderOpen, lastTrack, currentSection = false, nil, nil
 
-	reaper.PreventUIRefresh(1)
-	reaper.Undo_BeginBlock()
-
 	local function closeFolder()
 		if folderOpen and lastTrack then
 			reaper.SetMediaTrackInfo_Value(lastTrack, "I_FOLDERDEPTH", -1)
@@ -876,47 +904,50 @@ local function createSelectedTracks()
 		folderOpen = false
 	end
 
-	for _, t in ipairs(selected) do
-		n = n + 1
-		if existing[trackKey(t)] then
-			skipped = skipped + 1
-		else
-			if cfg.createFolders then
-				local sec = sectionOf(t.group)
-				if sec.id ~= currentSection then
-					closeFolder()
-					currentSection = sec.id
-					local fidx = reaper.CountTracks(0)
-					reaper.InsertTrackAtIndex(fidx, true)
-					local folder = reaper.GetTrack(0, fidx)
-					if folder then
-						reaper.GetSetMediaTrackInfo_String(folder, "P_NAME", "LV1 " .. sec.label:upper(), true)
-						reaper.SetMediaTrackInfo_Value(folder, "I_FOLDERDEPTH", 1)
-						reaper.SetMediaTrackInfo_Value(folder, "I_RECINPUT", -1)
-						local r, g, b = hexToRgb(imU32ToHex(sec.color >> 8))
-						if r then reaper.SetMediaTrackInfo_Value(folder, "I_CUSTOMCOLOR", reaper.ColorToNative(r, g, b) | 0x1000000) end
-						folderOpen = true
+	local ok = inUndoBlock("Create tracks from LV1", function()
+		for _, t in ipairs(selected) do
+			n = n + 1
+			if existing[trackKey(t)] then
+				skipped = skipped + 1
+			else
+				if cfg.createFolders then
+					local sec = sectionOf(t.group)
+					if sec.id ~= currentSection then
+						closeFolder()
+						currentSection = sec.id
+						local fidx = reaper.CountTracks(0)
+						reaper.InsertTrackAtIndex(fidx, true)
+						local folder = reaper.GetTrack(0, fidx)
+						if folder then
+							reaper.GetSetMediaTrackInfo_String(folder, "P_NAME", "LV1 " .. sec.label:upper(), true)
+							reaper.SetMediaTrackInfo_Value(folder, "I_FOLDERDEPTH", 1)
+							reaper.SetMediaTrackInfo_Value(folder, "I_RECINPUT", -1)
+							local r, g, b = hexToRgb(imU32ToHex(sec.color >> 8))
+							if r then reaper.SetMediaTrackInfo_Value(folder, "I_CUSTOMCOLOR", reaper.ColorToNative(r, g, b) | 0x1000000) end
+							folderOpen = true
+						end
 					end
 				end
-			end
 
-			local idx = reaper.CountTracks(0)
-			reaper.InsertTrackAtIndex(idx, true)
-			local tr = reaper.GetTrack(0, idx)
-			if tr then
-				local msg = applyTrackSettings(tr, t, labelFor(t, n, padWidth), hwMap)
-				if msg then note = msg end
-				lastTrack = tr
-				created = created + 1
+				local idx = reaper.CountTracks(0)
+				reaper.InsertTrackAtIndex(idx, true)
+				local tr = reaper.GetTrack(0, idx)
+				if tr then
+					local msg = applyTrackSettings(tr, t, labelFor(t, n, padWidth), hwMap)
+					if msg then note = msg end
+					lastTrack = tr
+					created = created + 1
+				end
 			end
 		end
-	end
-	closeFolder()
+		closeFolder()
+	end)
 
-	reaper.Undo_EndBlock("Create tracks from LV1", -1)
-	reaper.PreventUIRefresh(-1)
-	reaper.TrackList_AdjustWindows(false)
-	reaper.UpdateArrange()
+	if not ok then
+		setStatus("error", string.format(
+			"Track creation failed after %d track(s) — see the REAPER console. Undo to roll back.", created))
+		return
+	end
 
 	local msg = string.format("Created %d track%s.", created, created == 1 and "" or "s")
 	if skipped > 0 then msg = msg .. string.format(" %d already existed and were skipped.", skipped) end
@@ -931,25 +962,24 @@ local function updateExistingTracks()
 	local padWidth = math.max(2, #tostring(math.max(#selected, 1)))
 	local updated, missing = 0, 0
 
-	reaper.PreventUIRefresh(1)
-	reaper.Undo_BeginBlock()
 	local n = 0
-	for _, t in ipairs(selected) do
-		n = n + 1
-		local tr = existing[trackKey(t)]
-		if tr then
-			applyTrackSettings(tr, t, labelFor(t, n, padWidth), hwMap)
-			updated = updated + 1
-		else
-			missing = missing + 1
+	local ok = inUndoBlock("Update tracks from LV1", function()
+		for _, t in ipairs(selected) do
+			n = n + 1
+			local tr = existing[trackKey(t)]
+			if tr then
+				applyTrackSettings(tr, t, labelFor(t, n, padWidth), hwMap)
+				updated = updated + 1
+			else
+				missing = missing + 1
+			end
 		end
-	end
-	reaper.Undo_EndBlock("Update tracks from LV1", -1)
-	reaper.PreventUIRefresh(-1)
-	reaper.TrackList_AdjustWindows(false)
-	reaper.UpdateArrange()
+	end)
 
-	if updated == 0 then
+	if not ok then
+		setStatus("error", string.format(
+			"Update failed after %d track(s) — see the REAPER console. Undo to roll back.", updated))
+	elseif updated == 0 then
 		setStatus("error", "No previously imported LV1 track found in this project — use \"Create tracks\" first.")
 	else
 		local msg = string.format("Updated %d existing track%s.", updated, updated == 1 and "" or "s")
@@ -1355,7 +1385,7 @@ local function drawTrackTable(height)
 	ImGui.SameLine(ctx)
 	ImGui.BeginDisabled(ctx, #visible == 0)
 	if ImGui.Button(ctx, 'All', 44, 0) then for _, t in ipairs(visible) do t.selected = true end end
-	tooltip('Select every visible track')
+	tooltip('Select every visible track.\nTip: shift-click a checkbox to tick a whole range.')
 	ImGui.SameLine(ctx, 0, 4)
 	if ImGui.Button(ctx, 'None', 52, 0) then for _, t in ipairs(visible) do t.selected = false end end
 	tooltip('Deselect every visible track')
@@ -1397,6 +1427,24 @@ local function drawTrackTable(height)
 			ImGui.TableNextColumn(ctx)
 			local sc
 			sc, t.selected = ImGui.Checkbox(ctx, '##sel', t.selected)
+			if sc then
+				-- Shift-click ticks everything between the previous click and this
+				-- one. The anchor is stored as a track key rather than a row index
+				-- so it survives a change of filter or search term between clicks.
+				local mods = ImGui.GetKeyMods and ImGui.GetKeyMods(ctx) or 0
+				if (mods & E('Mod_Shift')) ~= 0 and lastClickedKey then
+					local anchor
+					for k, v in ipairs(visible) do
+						if trackKey(v) == lastClickedKey then anchor = k break end
+					end
+					if anchor and anchor ~= i then
+						for k = math.min(anchor, i), math.max(anchor, i) do
+							visible[k].selected = t.selected
+						end
+					end
+				end
+				lastClickedKey = trackKey(t)
+			end
 
 			ImGui.TableNextColumn(ctx)
 			ImGui.SetNextItemWidth(ctx, 22)
@@ -1460,6 +1508,26 @@ local function drawFooter()
 		end
 	end
 
+	-- The LR return is patched by absolute channel number, independently of the
+	-- input map, so it has to be folded into the "does my interface actually
+	-- have this many inputs" check too.
+	local highestNeeded = maxHw and (maxHw + 1) or nil
+	if cfg.prePatchInputs then
+		local lr = tonumber((cfg.lrInputChannel or ""):match("^%s*(.-)%s*$"))
+		local lrSelected = false
+		for _, t in ipairs(tracks) do
+			if t.selected and t.group == GROUP_LR then lrSelected = true break end
+		end
+		if lrSelected and lr and lr >= 1 then
+			highestNeeded = math.max(highestNeeded or 0, lr + 1)
+		end
+	end
+	-- REAPER happily accepts a record input past the end of the device and just
+	-- shows an unusable entry; you find out when you arm the track. Say it now.
+	local availableInputs = reaper.GetNumAudioInputs and reaper.GetNumAudioInputs() or 0
+	local shortBy = (highestNeeded and availableInputs > 0 and highestNeeded > availableInputs)
+		and (highestNeeded - availableInputs) or nil
+
 	ImGui.BeginGroup(ctx)
 	if sel == 0 then
 		ImGui.TextColored(ctx, COL.textFaint, 'Nothing selected.')
@@ -1469,7 +1537,18 @@ local function drawFooter()
 		ImGui.TextColored(ctx, COL.textFaint, string.format('| %d mono, %d stereo', mono, stereo))
 		if minHw then
 			ImGui.SameLine(ctx, 0, 8)
-			ImGui.TextColored(ctx, COL.textFaint, string.format('| inputs %d-%d', minHw + 1, maxHw + 1))
+			ImGui.TextColored(ctx, shortBy and COL.err or COL.textFaint,
+				string.format('| inputs %d-%d', minHw + 1, maxHw + 1))
+		end
+		if shortBy then
+			ImGui.SameLine(ctx, 0, 8)
+			ImGui.TextColored(ctx, COL.err, string.format('| needs %d, device has %d', highestNeeded, availableInputs))
+			tooltip(string.format(
+				'This selection patches up to hardware input %d, but REAPER currently sees only %d input(s).\n' ..
+				'%d track(s) would end up on an input that does not exist.\n\n' ..
+				'Either connect/enable the right device in REAPER\'s audio preferences, switch the patching to ' ..
+				'"Linear (no gaps)" in Settings > Import, or turn record-input pre-patching off.',
+				highestNeeded, availableInputs, shortBy))
 		end
 		if cfg.createFolders then
 			ImGui.SameLine(ctx, 0, 8)
@@ -1683,6 +1762,10 @@ end
 local function drawWindowBody()
 	drawHeader()
 	drawStatusStrip()
+	if isMockData then
+		ImGui.TextColored(ctx, COL.err,
+			'REPLAYED CAPTURE - this list came from a mock file, not from a live LV1. Do not build a real session from it.')
+	end
 	ImGui.Spacing(ctx)
 
 	local _, availH = ImGui.GetContentRegionAvail(ctx)

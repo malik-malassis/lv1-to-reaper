@@ -57,6 +57,13 @@ project; this repository reimplements it independently. See [LICENSE](LICENSE).
 - The LV1 and the REAPER machine on the same LAN/subnet, for zDNS multicast
   discovery to work.
 
+> **Platform:** developed and tested on Windows only. The ReaScript builds
+> POSIX-quoted commands and the Node helper has no Windows-specific code, so
+> macOS and Linux should work — but neither has been run. `deploy.ps1` is
+> PowerShell; on macOS/Linux, copy `LV1_Track_Importer.lua` and
+> `lv1_fetch.js` into `~/Library/Application Support/REAPER/Scripts/` (or
+> `~/.config/REAPER/Scripts/`) yourself. Reports welcome.
+
 ## Install
 
 ```powershell
@@ -78,10 +85,17 @@ select `LV1_Track_Importer.lua`.
    network, hit **Scan network** first and pick the right one in the sidebar.
 2. Filter with the search box, the group list, or **Hide unused** (which hides
    channels still carrying an LV1 factory name like `Channel 12` or `Fx 3`).
-3. Tick what you want. Adjust name, Mono/Stereo or color inline — the
-   **Input** column shows live which hardware input each track will land on.
+3. Tick what you want — **shift-click a checkbox to tick a whole range**.
+   Adjust name, Mono/Stereo or color inline; the **Input** column shows live
+   which hardware input each track will land on, and the footer turns red if
+   the selection needs more inputs than your audio device actually has.
 4. **Create N tracks**, or **Update existing** to refresh tracks a previous
    run already created.
+
+The blue button is always the next step: **Scan network** until a console is
+selected, then **Fetch tracks**. Fetch stays disabled while no console is
+chosen. A console picked in an earlier session is restored from the settings
+and stays listed, so you don't have to rescan at every REAPER launch.
 
 Fetching runs in the background: REAPER stays usable, and the progress strip
 shows the helper's live log. A typical fetch takes 2–3 s because the helper
@@ -115,6 +129,10 @@ always waiting out its full timeout.
   every channel on connect; a channel that somehow arrives without one gets a
   grey swatch you can click to set manually.
 - Only channels with a resolved name are listed.
+- Record inputs are checked against `GetNumAudioInputs()`. REAPER accepts an
+  input index past the end of the device and simply shows an unusable entry,
+  which you'd discover when arming the track, so the footer flags the
+  mismatch before anything is created.
 
 ## Troubleshooting
 
@@ -159,9 +177,22 @@ node lv1_fetch.js --host 192.168.1.40 --verbose
 npm test
 ```
 
-29 unit tests cover the OSC codec, the zDNS parser, the `/Channels` stride
+33 checks: the OSC codec, the zDNS parser, the `/Channels` stride
 auto-detection and the mono/stereo decision logic — the parts that can't be
-verified by hand against a live console.
+verified by hand against a live console — plus a Lua parse of the ReaScript
+and the cross-file invariants (both halves agreeing on the JSON schema
+version, the ReaPack headers being present, the version matching
+`package.json`).
+
+The Lua parse matters more than it sounds: REAPER only reports a broken
+script when you trigger the action, the message is a bare line number, and an
+already-open script window keeps running the previous version — so a syntax
+error looks like "my change had no effect" long before it looks like an
+error. Run it alone with:
+
+```bash
+npm run lint:lua
+```
 
 Work on the UI with no mixer on the network by replaying a captured session:
 
@@ -170,7 +201,28 @@ npm run mock
 ```
 
 This writes `lv1_tracks.json` from `test/fixtures/lv1_tracks.sample.json`
-(a real 109-track capture), which the ReaScript then reads normally.
+(a real 109-track capture), which the ReaScript then reads normally. The
+window shows a red **REPLAYED CAPTURE** banner so a mock list can't be
+mistaken for a live one.
+
+### Publishing via ReaPack
+
+The script already carries the headers ReaPack needs (`@description`,
+`@author`, `@version`, `@provides`, `@about`, `@changelog`) — `npm test`
+fails if any goes missing or if `@version` drifts from `package.json`.
+
+To turn the repository into an installable ReaPack repository, push it to a
+public git remote and generate the index with
+[reapack-index](https://github.com/cfillion/reapack-index) (a Ruby gem):
+
+```bash
+gem install reapack-index && reapack-index --commit
+```
+
+It reads the headers from the git history and writes `index.xml`; users then
+add your repository's raw `index.xml` URL in ReaPack → Import repositories.
+Bump `@version` **and** `package.json` together for each release — the index
+keys off the header, and the test keys off both.
 
 ### Helper CLI
 

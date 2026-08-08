@@ -73,27 +73,36 @@ end
 
 local ImGui
 do
-	local loaded = false
+	local raw
 	if reaper.ImGui_GetBuiltinPath then
 		local okPath, builtin = pcall(reaper.ImGui_GetBuiltinPath)
 		if okPath and builtin then
 			package.path = builtin .. "/?.lua;" .. package.path
 			local okReq, mod = pcall(function() return require 'imgui' '0.9' end)
-			if okReq and type(mod) == "table" then
-				ImGui = mod
-				loaded = true
-			end
+			if okReq and type(mod) == "table" then raw = mod end
 		end
 	end
-	if not loaded then
-		ImGui = setmetatable({}, {
-			__index = function(t, k)
-				local fn = reaper["ImGui_" .. k]
-				if fn ~= nil then rawset(t, k, fn) end
-				return fn
-			end,
-		})
+	if not raw then
+		-- Legacy flat API: reaper.ImGui_Xxx(). Missing names are plain nil.
+		raw = setmetatable({}, { __index = function(_, k) return reaper["ImGui_" .. k] end })
 	end
+
+	-- The table returned by `require 'imgui'` installs a metatable that RAISES
+	-- on any unknown field rather than returning nil:
+	--   __index = function(_, key) error("attempt to access a nil value ...") end
+	-- Every optional-feature probe in this script (`if ImGui.Foo then`, and the
+	-- enum lookups in E) would therefore abort the frame on any ReaImGui build
+	-- that happens not to expose one name — and pushTheme() runs outside the
+	-- per-frame pcall, so a single missing colour enum would kill the whole
+	-- script. Wrap it so a missing name reads as nil again, caching the hits.
+	ImGui = setmetatable({}, {
+		__index = function(t, k)
+			local ok, v = pcall(function() return raw[k] end)
+			if not ok then v = nil end
+			if v ~= nil then rawset(t, k, v) end
+			return v
+		end,
+	})
 end
 
 local enumCache = {}
@@ -358,7 +367,41 @@ end
 
 local tracks = {}          -- { {group, ch, name, editedName, stereo, detect, color, selected}, ... }
 local devices = {}         -- LV1s seen on the LAN during the last scan/fetch
-local statusMsg = "Ready. Click \"Fetch tracks\" to connect to the LV1."
+
+-- Builds a device entry out of the saved settings. The console picked in an
+-- earlier session has to stay visible in the Devices list even before any scan
+-- has run, otherwise the header names a target the list doesn't contain - and
+-- there is nothing to click to clear the selection.
+local function savedDevice()
+	if cfg.host == "" then return nil end
+	return {
+		name = cfg.deviceName ~= "" and cfg.deviceName or cfg.host,
+		host = cfg.deviceName ~= "" and cfg.deviceName or nil,
+		address = cfg.host,
+		addresses = { cfg.host },
+		port = tonumber(cfg.port),
+		seen = false,      -- restored from settings, not observed on the LAN yet
+	}
+end
+
+-- Upholds the invariant "the selected console is always one of the rows".
+local function mergeSavedDevice()
+	if cfg.host == "" then return end
+	for _, d in ipairs(devices) do
+		if d.address == cfg.host or d.name == cfg.host or d.host == cfg.host then return end
+	end
+	devices[#devices+1] = savedDevice()
+end
+
+do
+	local d = savedDevice()
+	if d then devices = { d } end
+end
+-- Opening line matches whichever button is lit, so the window explains its own
+-- next step whether or not a console was already saved from a previous session.
+local statusMsg = cfg.host ~= ""
+	and string.format("Ready. Console: %s. Click \"Fetch tracks\".", cfg.deviceName ~= "" and cfg.deviceName or cfg.host)
+	or "Start with \"Scan network\" to find your LV1, then pick it in the Devices list."
 local statusKind = "idle"  -- idle | busy | ok | error
 local lastLog = ""
 local forceOpenDiag = false
@@ -612,6 +655,7 @@ applyResult = function(kind, blocking)
 
 	lastResult = data
 	if type(data.devices) == "table" then devices = data.devices end
+	mergeSavedDevice()
 
 	if data.schemaVersion and data.schemaVersion > SCHEMA_VERSION then
 		setStatus("error", string.format(
@@ -946,14 +990,18 @@ end
 -- per frame (both take a count), and each push only happens when the enum
 -- actually exists, so version differences can't desync the counts.
 local function pushTheme()
+	-- Each counter is only incremented when the push actually succeeded, so a
+	-- style name this ReaImGui build rejects can never desync the matching
+	-- Pop*(count) call. pushTheme runs outside the per-frame pcall, so it has
+	-- to be the sturdiest code in the script.
 	local nVars, nCols = 0, 0
 	local function var(name, ...)
 		local v = E(name, -1)
-		if v ~= -1 then ImGui.PushStyleVar(ctx, v, ...); nVars = nVars + 1 end
+		if v ~= -1 and pcall(ImGui.PushStyleVar, ctx, v, ...) then nVars = nVars + 1 end
 	end
 	local function col(name, value)
 		local v = E(name, -1)
-		if v ~= -1 then ImGui.PushStyleColor(ctx, v, value); nCols = nCols + 1 end
+		if v ~= -1 and pcall(ImGui.PushStyleColor, ctx, v, value) then nCols = nCols + 1 end
 	end
 
 	var('StyleVar_WindowRounding', 8.0)
@@ -1017,8 +1065,26 @@ end
 
 -- ─── small drawing helpers ───
 
-local function tooltip(text)
-	if ImGui.IsItemHovered(ctx) then ImGui.SetTooltip(ctx, text) end
+-- allowDisabled is needed to explain a greyed-out control: ImGui suppresses
+-- hover on disabled items unless explicitly asked otherwise, and a disabled
+-- button with no explanation is the most frustrating thing in a UI.
+local function tooltip(text, allowDisabled)
+	local flags = allowDisabled and E('HoveredFlags_AllowWhenDisabled') or 0
+	if ImGui.IsItemHovered(ctx, flags) then ImGui.SetTooltip(ctx, text) end
+end
+
+-- Paints a button as the primary action. Only one button is ever primary at a
+-- time: the blue fill is what tells you the next step, so spending it on two
+-- controls at once would make it mean nothing.
+local function pushPrimaryColors(isPrimary)
+	if not isPrimary then return 0 end
+	local nc = 0
+	local function col(name, v) local e = E(name, -1); if e ~= -1 and pcall(ImGui.PushStyleColor, ctx, e, v) then nc = nc + 1 end end
+	col('Col_Button', COL.accent)
+	col('Col_ButtonHovered', COL.accentHi)
+	col('Col_ButtonActive', COL.accentLo)
+	col('Col_Text', 0xFFFFFFFF)
+	return nc
 end
 
 -- A filled dot drawn straight into the draw list: ReaImGui's default font
@@ -1044,7 +1110,7 @@ local function segmented(isStereo)
 
 	local function part(text, active, width)
 		local nc = 0
-		local function col(name, v) local e = E(name, -1); if e ~= -1 then ImGui.PushStyleColor(ctx, e, v); nc = nc + 1 end end
+		local function col(name, v) local e = E(name, -1); if e ~= -1 and pcall(ImGui.PushStyleColor, ctx, e, v) then nc = nc + 1 end end
 		col('Col_Button', active and COL.accent or 0x00000000)
 		col('Col_ButtonHovered', active and COL.accentHi or COL.raisedHi)
 		col('Col_ButtonActive', COL.accentLo)
@@ -1097,21 +1163,33 @@ local function drawHeader()
 		ImGui.SameLine(ctx)
 		ImGui.SetCursorPosX(ctx, math.max(ImGui.GetCursorPosX(ctx) + 12, ImGui.GetWindowWidth(ctx) - cluster - 14))
 
-		ImGui.BeginDisabled(ctx, job ~= nil)
-		local nc = 0
-		local function col(name, v) local e = E(name, -1); if e ~= -1 then ImGui.PushStyleColor(ctx, e, v); nc = nc + 1 end end
-		col('Col_Button', COL.accent)
-		col('Col_ButtonHovered', COL.accentHi)
-		col('Col_ButtonActive', COL.accentLo)
-		col('Col_Text', 0xFFFFFFFF)
-		if ImGui.Button(ctx, job and 'Fetching...' or 'Fetch tracks', 128, 26) then startJob('fetch') end
+		-- The blue fill always marks the next sensible step: scan until a console
+		-- has been picked, then fetch. Note the condition is "a console is
+		-- selected", NOT "a scan ran in this session" - a host restored from the
+		-- saved settings is just as valid a target, and forcing a rescan at every
+		-- REAPER launch would be busywork.
+		local hasTarget = cfg.host ~= ""
+
+		ImGui.BeginDisabled(ctx, job ~= nil or not hasTarget)
+		local nc = pushPrimaryColors(hasTarget)
+		if ImGui.Button(ctx, (job and job.kind == 'fetch') and 'Fetching...' or 'Fetch tracks', 128, 26) then
+			startJob('fetch')
+		end
 		if nc > 0 then ImGui.PopStyleColor(ctx, nc) end
-		tooltip('Connect to the LV1 and read its track list.')
+		ImGui.EndDisabled(ctx)
+		tooltip(hasTarget
+			and 'Connect to the LV1 and read its track list.'
+			or 'No console selected yet. Run "Scan network", then click your LV1 in the Devices list.', true)
 
 		ImGui.SameLine(ctx)
-		if ImGui.Button(ctx, 'Scan network', 116, 26) then startJob('scan') end
-		tooltip('List every LV1 announcing itself on the LAN, without connecting.')
+		ImGui.BeginDisabled(ctx, job ~= nil)
+		local nc2 = pushPrimaryColors(not hasTarget)
+		if ImGui.Button(ctx, (job and job.kind == 'scan') and 'Scanning...' or 'Scan network', 116, 26) then
+			startJob('scan')
+		end
+		if nc2 > 0 then ImGui.PopStyleColor(ctx, nc2) end
 		ImGui.EndDisabled(ctx)
+		tooltip('List every LV1 announcing itself on the LAN, without connecting.')
 
 		ImGui.SameLine(ctx)
 		if ImGui.Button(ctx, 'Settings', 92, 26) then showSettings = true end
@@ -1168,27 +1246,28 @@ local function drawSidebar(height)
 	ImGui.TextColored(ctx, COL.textFaint, string.format('(%d)', #devices))
 	ImGui.Separator(ctx)
 
-	local autoSelected = cfg.host == ""
-	if ImGui.Selectable(ctx, 'Auto-discover', autoSelected, 0, 118, 0) then useDevice(nil) end
-	tooltip('Use whichever LV1 answers first. Fine with a single console on the network.')
-	ImGui.SameLine(ctx, 0, 6)
-	ImGui.TextColored(ctx, COL.textFaint, 'any LV1')
-
 	for i, dev in ipairs(devices) do
 		ImGui.PushID(ctx, 'dev' .. i)
 		local addr = dev.address or dev.host or '?'
 		local isCurrent = (cfg.host ~= "" and (cfg.host == addr or cfg.host == dev.name))
-		if ImGui.Selectable(ctx, (dev.name or dev.host or 'LV1'), isCurrent, 0, 118, 0) then useDevice(dev) end
-		tooltip(string.format('%s\nport %s (re-resolved automatically at each fetch)', addr, tostring(dev.port or '?')))
+		-- Clicking the selected console again clears the choice, which is how
+		-- you get back to "use whatever answers first" without a pseudo-entry
+		-- sitting in a list of real hardware.
+		if ImGui.Selectable(ctx, (dev.name or dev.host or 'LV1'), isCurrent, 0, 118, 0) then
+			useDevice(isCurrent and nil or dev)
+		end
+		tooltip(string.format('%s\nport %s (re-resolved at every fetch)%s\n\nClick again to clear the selection.',
+			addr, tostring(dev.port or '?'),
+			dev.seen == false and '\n\nRestored from your settings - this console has not announced itself since the window opened.' or ''))
 		ImGui.SameLine(ctx, 0, 6)
-		ImGui.TextColored(ctx, isCurrent and COL.accentHi or COL.textFaint, addr)
+		ImGui.TextColored(ctx, (isCurrent and dev.seen ~= false) and COL.accentHi or COL.textFaint, addr)
 		ImGui.PopID(ctx)
 	end
 
 	if #devices == 0 then
 		ImGui.TextColored(ctx, COL.textFaint, 'No scan yet.')
 		ImGui.TextColored(ctx, COL.textFaint, 'Use "Scan network".')
-	elseif #devices > 1 then
+	elseif #devices > 1 and cfg.host == "" then
 		ImGui.Spacing(ctx)
 		ImGui.TextColored(ctx, COL.warn, string.format('%d consoles found -', #devices))
 		ImGui.TextColored(ctx, COL.warn, 'pick the right one.')
@@ -1407,7 +1486,7 @@ local function drawFooter()
 	tooltip('Refresh name, color, width and record input of tracks previously created by this script, instead of creating duplicates.')
 	ImGui.SameLine(ctx)
 	local nc = 0
-	local function col(name, v) local e = E(name, -1); if e ~= -1 then ImGui.PushStyleColor(ctx, e, v); nc = nc + 1 end end
+	local function col(name, v) local e = E(name, -1); if e ~= -1 and pcall(ImGui.PushStyleColor, ctx, e, v) then nc = nc + 1 end end
 	col('Col_Button', COL.accent)
 	col('Col_ButtonHovered', COL.accentHi)
 	col('Col_ButtonActive', COL.accentLo)

@@ -3,6 +3,9 @@
 -- @version 2.1.0
 -- @provides
 --   lv1_fetch.js
+-- @links
+--   Repository https://github.com/malik-malassis/lv1-to-reaper
+--   Report a bug https://github.com/malik-malassis/lv1-to-reaper/issues
 -- @about
 --   # LV1 Track Importer
 --
@@ -10,7 +13,16 @@
 --   tracks in the current REAPER project, carrying over name, mono/stereo
 --   width and color, and optionally pre-patching the record inputs.
 --
---   Requires ReaImGui (cfillion) and Node.js on PATH.
+--   Requires ReaImGui (cfillion) and Node.js on PATH. LV1_Track_Importer.lua
+--   and lv1_fetch.js must sit in the same folder.
+--
+--   It reads from the console and never writes to it: the only messages sent
+--   are the handshake, the keep-alive and two topology queries.
+--
+--   Licensed under PolyForm Noncommercial 1.0.0 - free for any noncommercial
+--   use, not for sale or for inclusion in a commercial product. The bundled
+--   OSC codec is used under the MIT License from
+--   bitfocus/companion-module-waves-lv1. See LICENSE.
 -- @changelog
 --   2.1.0
 --   - Track creation and update can no longer leave REAPER's UI refresh

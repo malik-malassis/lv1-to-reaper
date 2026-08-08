@@ -12,7 +12,10 @@ const path = require('node:path')
 
 const ROOT = path.join(__dirname, '..')
 const LUA_PATH = path.join(ROOT, 'LV1_Track_Importer.lua')
-const LUA = fs.readFileSync(LUA_PATH, 'utf8')
+// Normalise line endings: on Windows with core.autocrlf the working copy is
+// checked out as CRLF, and a pattern matching an explicit \n would then fail
+// for reasons that have nothing to do with what is being tested.
+const LUA = fs.readFileSync(LUA_PATH, 'utf8').replace(/\r\n/g, '\n')
 const lv1 = require('../lv1_fetch.js')
 
 let luaparse

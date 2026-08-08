@@ -1,0 +1,24 @@
+name: Feature request
+description: Suggest something the importer should do
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: >
+        Describe the situation rather than the solution — the workflow you're
+        stuck on is usually more useful than a proposed button.
+      placeholder: |
+        Before every show I import the same 20 channels out of 64, and I
+        re-tick them by hand each time.
+    validations:
+      required: true
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: What did you have in mind?
+      description: Optional — a rough idea of how it might work.
+    validations:
+      required: false

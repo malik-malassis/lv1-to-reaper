@@ -8,6 +8,7 @@ Built for the live multitrack workflow: fetch, tick what you need, create.
 A 64-channel console goes from "nothing" to a fully named, colored, correctly
 patched REAPER session in about ten seconds.
 
+<!-- TODO: replace with a real screenshot of the window, e.g. docs/screenshot.png -->
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
 │ LV1 -> REAPER   ● LV1-CLASSIC 192.168.1.40   [Fetch tracks][Scan][⚙]     │
@@ -23,6 +24,18 @@ patched REAPER session in about ten seconds.
 │ 24 tracks | 18 mono, 6 stereo | inputs 1-30   [Update existing][Create]  │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
+
+## It never changes anything on your console
+
+The helper only ever sends five messages to the LV1: `/handshake`,
+`/device_name`, `/Get/Aux/Tracks`, `/Get/Layers` and `/pong`. Four are the
+connection handshake and the keep-alive; two are read requests. **There is no
+code path in this project that writes a value to the mixer** — no level, no
+name, no routing, no scene recall. It registers as a remote-control client,
+reads the topology the console broadcasts, and disconnects.
+
+You can verify it yourself: every outgoing message is a `send(...)` call in
+[lv1_fetch.js](lv1_fetch.js), and there are five of them.
 
 ## How it works
 
@@ -40,9 +53,12 @@ split in two:
    the helper in the background (REAPER stays responsive), reads the result,
    and gives you a filterable track list with live record-input preview.
 
-The protocol was reverse-engineered by the MIT-licensed
+The LV1 wire protocol was reverse-engineered by the MIT-licensed
 [bitfocus/companion-module-waves-lv1](https://github.com/bitfocus/companion-module-waves-lv1)
-project; this repository reimplements it independently. See [LICENSE](LICENSE).
+project, and the OSC codec in `lv1_fetch.js` is a JavaScript port of their
+`src/osc.ts`. Those portions are used under the MIT License — see
+[LICENSE](LICENSE) for the full attribution. Without that project this tool
+would not exist.
 
 ## Requirements
 
@@ -66,18 +82,38 @@ project; this repository reimplements it independently. See [LICENSE](LICENSE).
 
 ## Install
 
+No build step, no npm, no command line needed.
+
+1. Download the latest release archive from
+   [Releases](https://github.com/malik-malassis/lv1-to-reaper/releases).
+2. Unzip it into REAPER's `Scripts` folder, so you end up with a folder like:
+   - Windows — `%APPDATA%\REAPER\Scripts\lv1-reaper\`
+   - macOS — `~/Library/Application Support/REAPER/Scripts/lv1-reaper/`
+   - Linux — `~/.config/REAPER/Scripts/lv1-reaper/`
+3. In REAPER: Actions → Show action list → New action → **Load ReaScript…** →
+   select `LV1_Track_Importer.lua`.
+4. Run the action. (Assign it a keyboard shortcut or a toolbar button while
+   you're in the action list — it's the kind of tool you reach for at the
+   start of every session.)
+
+> **`LV1_Track_Importer.lua` and `lv1_fetch.js` must sit in the same folder.**
+> The ReaScript looks for the helper next to itself; a copy of only the `.lua`
+> installs cleanly and then fails at fetch time.
+
+<details>
+<summary>Installing from a clone instead (contributors)</summary>
+
 ```powershell
 npm run deploy
 ```
 
-Copies both files to `%APPDATA%\REAPER\Scripts\lv1-reaper` and verifies the
-copy. For a portable REAPER: `./deploy.ps1 -Portable "D:\REAPER"`.
+Copies the four distributed files to `%APPDATA%\REAPER\Scripts\lv1-reaper`,
+verifies each one by SHA-256, and removes any stale result file left over from
+a previous run. For a portable REAPER install:
+`./deploy.ps1 -Portable "D:\REAPER"`. PowerShell only — on macOS and Linux,
+copy the files by hand.
 
-Then in REAPER: Actions → Show action list → New action → Load ReaScript… →
-select `LV1_Track_Importer.lua`.
-
-> Both files must be deployed together — the ReaScript looks for
-> `lv1_fetch.js` in its own folder.
+</details>
 
 ## Usage
 
@@ -133,6 +169,24 @@ always waiting out its full timeout.
   input index past the end of the device and simply shows an unusable entry,
   which you'd discover when arming the track, so the footer flags the
   mismatch before anything is created.
+
+### What has actually been tested
+
+Development and testing were done against **one console: an LV1 in 64-channel
+mode, on Windows**, with a 109-track session (64 inputs, 8 groups, 24 aux/FX,
+8 matrix, LR/C/M, cue and talkback).
+
+The 16, 32 and 80-channel modes, other LV1 versions, macOS and Linux are all
+*expected* to work — nothing in the code is specific to a channel count or a
+platform — but none of them has been run. If you try one, a report either way
+is genuinely useful; the diagnostic log (Settings → Advanced → Verbose) is
+what makes a bug report actionable.
+
+The `/Channels` message layout is the part most likely to drift between LV1
+firmware versions. The helper auto-detects the argument stride rather than
+assuming the documented one, and says so in the log when it finds something
+other than 19 — so a firmware change should degrade to a warning rather than
+to an empty track list.
 
 ## Troubleshooting
 
@@ -211,9 +265,10 @@ The script already carries the headers ReaPack needs (`@description`,
 `@author`, `@version`, `@provides`, `@about`, `@changelog`) — `npm test`
 fails if any goes missing or if `@version` drifts from `package.json`.
 
-To turn the repository into an installable ReaPack repository, push it to a
-public git remote and generate the index with
-[reapack-index](https://github.com/cfillion/reapack-index) (a Ruby gem):
+To make the tool installable through ReaPack (in addition to the Releases
+download above), generate the index with
+[reapack-index](https://github.com/cfillion/reapack-index) (a Ruby gem) — the
+repository must be public:
 
 ```bash
 gem install reapack-index && reapack-index --commit
@@ -234,3 +289,40 @@ node lv1_fetch.js [--host <ip>] [--port <n>] [--scan] [--mock <file>]
 
 Exit codes: `0` ok · `1` connect failed · `2` no LV1 found · `3` host never
 announced itself · `4` no handshake · `5` mock file unreadable.
+
+## Support
+
+Bugs and questions go to
+[Issues](https://github.com/malik-malassis/lv1-to-reaper/issues).
+
+For anything connection-related, attach the diagnostic log: Settings →
+Advanced → tick **Verbose diagnostic log**, fetch again, then copy the
+**Diagnostic log** panel. It contains every zDNS packet and OSC message
+exchanged, which is what makes the difference between a guess and a fix.
+Please also say which LV1 mode you're in (16/32/64/80 ch) and your OS.
+
+This is a tool one person maintains alongside actual gigs — no response-time
+promises. Pull requests are welcome; run `npm test` before opening one.
+
+## License
+
+[PolyForm Noncommercial 1.0.0](LICENSE) — free to use, modify and share for
+any noncommercial purpose: personal use, hobby projects, education, charities,
+public research and government institutions all qualify. **Selling it, or any
+part of it, or shipping it inside a commercial product or service, is not
+permitted** without a separate licence.
+
+Note that a restriction on commercial use means this is **source-available**
+software, not open source in the strict sense — the Open Source Definition
+does not allow restrictions on the field of use. The source is public, and it
+is free for the people it is written for.
+
+The OSC codec is used under the MIT License from
+[bitfocus/companion-module-waves-lv1](https://github.com/bitfocus/companion-module-waves-lv1);
+those portions remain under MIT. See [LICENSE](LICENSE) for details.
+
+Waves and LV1 are trademarks of Waves Audio Ltd. REAPER is a trademark of
+Cockos Incorporated. This project is not affiliated with, endorsed by, or
+supported by either company. It reads from the console and never writes to it,
+but it comes with no warranty of any kind — test it before you rely on it at
+a show.

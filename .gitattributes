@@ -1,0 +1,16 @@
+# Normalise line endings in the repository: everything is stored as LF and
+# checked out with the platform's native convention. Without this, a Windows
+# contributor commits CRLF, a macOS one commits LF, and every pull request
+# shows the whole file as changed.
+* text=auto
+
+# REAPER reads either convention, but keeping the shipped files LF means the
+# archive attached to a release is identical on every platform.
+*.lua text eol=lf
+*.js  text eol=lf
+*.md  text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+
+# PowerShell is happier with CRLF on Windows.
+*.ps1 text eol=crlf

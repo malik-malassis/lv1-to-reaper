@@ -2,16 +2,18 @@
   "name": "lv1-reaper",
   "version": "2.1.0",
   "description": "Import a Waves LV1 mixer's track list (name, mono/stereo, color) into REAPER",
-  "license": "MIT",
+  "license": "SEE LICENSE IN LICENSE",
   "author": "Malik MALASSIS",
   "private": true,
   "main": "lv1_fetch.js",
-  "files": [
-    "lv1_fetch.js",
-    "LV1_Track_Importer.lua",
-    "README.md",
-    "LICENSE"
-  ],
+  "homepage": "https://github.com/malik-malassis/lv1-to-reaper",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/malik-malassis/lv1-to-reaper.git"
+  },
+  "bugs": {
+    "url": "https://github.com/malik-malassis/lv1-to-reaper/issues"
+  },
   "scripts": {
     "test": "node tools/lint-lua.js && node --test",
     "lint:lua": "node tools/lint-lua.js",

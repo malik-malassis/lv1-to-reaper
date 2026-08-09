@@ -1,6 +1,6 @@
 {
   "name": "lv1-reaper",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Import a Waves LV1 mixer's track list (name, mono/stereo, color) into REAPER",
   "license": "SEE LICENSE IN LICENSE",
   "author": "Malik MALASSIS",

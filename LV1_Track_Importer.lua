@@ -1,6 +1,6 @@
 -- @description LV1 Track Importer - connect to a Waves LV1 mixer and create Reaper tracks
 -- @author Malik MALASSIS - @malik_biendebout
--- @version 2.1.0
+-- @version 2.1.1
 -- @provides
 --   lv1_fetch.js
 -- @links
@@ -24,6 +24,13 @@
 --   OSC codec is used under the MIT License from
 --   bitfocus/companion-module-waves-lv1. See LICENSE.
 -- @changelog
+--   2.1.1
+--   - Fixed: with ReaImGui 0.10, which is what any fresh install gets, every
+--     frame logged two "ImGui_PushFont: expected 3 arguments minimum" errors.
+--     PushFont changed signature in 0.10 and the script now reads the version
+--     instead of trying both forms.
+--   - The ReaImGui version is shown in Settings > Advanced, so a bug report
+--     carries the one detail that explains this class of problem.
 --   2.1.0
 --   - Track creation and update can no longer leave REAPER's UI refresh
 --     disabled or an undo block open if they fail partway through.

@@ -1,332 +1,254 @@
-# LV1 → REAPER Track Importer
+# LV1 → REAPER
 
-Connects to a Waves LV1 live mixer on the network and creates the tracks you
-pick in the current REAPER project — carrying over **name**, **mono/stereo
-width** and **color**, and optionally **pre-patching the record inputs**.
+**Build your REAPER recording session straight from your Waves LV1 — names,
+colours, mono/stereo and input patching included. About ten seconds instead of
+half an hour.**
 
-Built for the live multitrack workflow: fetch, tick what you need, create.
-A 64-channel console goes from "nothing" to a fully named, colored, correctly
-patched REAPER session in about ten seconds.
-
-![The importer after a fetch: 109 channels read from the console, grouped and
-filtered in the sidebar, each row showing its name, mono/stereo width and the
-hardware input it will be patched to. The footer warns in red that the
-selection needs 71 inputs while the audio device only exposes
+![The importer after reading a console: 109 channels listed with their names,
+colours, mono or stereo width and the hardware input each one will record from.
+The sidebar groups them by Inputs, Groups, Aux, Matrix and Masters. The footer
+warns in red that the selection needs 71 inputs while the sound card only has
 64.](docs/tracks.png)
 
-## It never changes anything on your console
+You pick which channels you want. It creates them in REAPER, already named,
+already coloured the same as on the desk, already mono or stereo, already
+patched to the right inputs.
 
-The helper only ever sends five messages to the LV1: `/handshake`,
-`/device_name`, `/Get/Aux/Tracks`, `/Get/Layers` and `/pong`. Four are the
-connection handshake and the keep-alive; two are read requests. **There is no
-code path in this project that writes a value to the mixer** — no level, no
-name, no routing, no scene recall. It registers as a remote-control client,
-reads the topology the console broadcasts, and disconnects.
+---
 
-You can verify it yourself: every outgoing message is a `send(...)` call in
-[lv1_fetch.js](lv1_fetch.js), and there are five of them.
+## It reads your console. It never changes it.
 
-## How it works
+This is worth being clear about, because you are going to run it on a desk
+before a show.
 
-REAPER's ReaScript environment can't open raw TCP sockets, so the tool is
-split in two:
+The importer **only asks the console questions**. It introduces itself, asks
+for the channel list, and hangs up. There is no part of it that can change a
+level, a name, a routing, a scene or anything else on your LV1. Running it
+during a soundcheck cannot alter your mix.
 
-1. **[lv1_fetch.js](lv1_fetch.js)** — a dependency-free Node.js helper. It
-   discovers the LV1 via zDNS (UDP multicast `225.1.1.1:13337`), runs the
-   `MyFOH`-style handshake over OSC-on-TCP, requests the topology and listens
-   for the LV1's `/Channels` broadcast plus `/Notify/TrackColor` and
-   `/Notify/Meters` events. It writes `lv1_tracks.json` — always, even on
-   failure, with a machine-readable error so the UI can explain what happened.
-2. **[LV1_Track_Importer.lua](LV1_Track_Importer.lua)** — a REAPER ReaScript
-   built on **[ReaImGui](https://github.com/cfillion/reaimgui)**. It launches
-   the helper in the background (REAPER stays responsive), reads the result,
-   and gives you a filterable track list with live record-input preview.
+---
 
-The LV1 wire protocol was reverse-engineered by the MIT-licensed
-[bitfocus/companion-module-waves-lv1](https://github.com/bitfocus/companion-module-waves-lv1)
-project, and the OSC codec in `lv1_fetch.js` is a JavaScript port of their
-`src/osc.ts`. Those portions are used under the MIT License — see
-[LICENSE](LICENSE) for the full attribution. Without that project this tool
-would not exist.
+## Before you start
 
-## Requirements
+Three things, all free, all one-time.
 
-- REAPER with ReaScript (Lua) enabled.
-- **[ReaImGui](https://github.com/cfillion/reaimgui)** (author: cfillion),
-  installed via [ReaPack](https://reapack.com): Extensions → ReaPack → Browse
-  packages… → search "ReaImGui" → Install → restart REAPER. The script shows a
-  reminder dialog if it's missing. Both the modern `require 'imgui'` API and
-  the older `reaper.ImGui_*` one are supported.
-- [Node.js](https://nodejs.org/) 16+ on `PATH` (or point the script at a full
-  path in Settings → Connection).
-- The LV1 and the REAPER machine on the same LAN/subnet, for zDNS multicast
-  discovery to work.
+**1. ReaImGui** — an add-on that lets scripts draw proper windows in REAPER.
 
-> **Platform:** developed and tested on Windows only. The ReaScript builds
-> POSIX-quoted commands and the Node helper has no Windows-specific code, so
-> macOS and Linux should work — but neither has been run. `deploy.ps1` is
-> PowerShell; on macOS/Linux, copy `LV1_Track_Importer.lua` and
-> `lv1_fetch.js` into `~/Library/Application Support/REAPER/Scripts/` (or
-> `~/.config/REAPER/Scripts/`) yourself. Reports welcome.
+In REAPER: `Extensions` → `ReaPack` → `Browse packages…` → type `ReaImGui` →
+right-click the one by **cfillion** → `Install` → `OK` → restart REAPER.
+
+> No ReaPack menu? Install it first from [reapack.com](https://reapack.com),
+> then restart REAPER.
+
+**2. Node.js** — a small free program the importer uses to talk to your console
+over the network. You will never open it yourself.
+
+Download it from [nodejs.org](https://nodejs.org/) (the button on the left),
+run the installer, click Next until it finishes.
+
+**3. Your LV1 and your computer on the same network.** Same switch, same
+router. Not through a VPN, not on a different Wi-Fi.
+
+---
 
 ## Install
 
-No build step, no npm, no command line needed.
+### The easy way — ReaPack
 
-1. Download the latest release archive from
-   [Releases](https://github.com/malik-malassis/lv1-to-reaper/releases).
-2. Unzip it into REAPER's `Scripts` folder, so you end up with a folder like:
-   - Windows — `%APPDATA%\REAPER\Scripts\lv1-reaper\`
-   - macOS — `~/Library/Application Support/REAPER/Scripts/lv1-reaper/`
-   - Linux — `~/.config/REAPER/Scripts/lv1-reaper/`
-3. In REAPER: Actions → Show action list → New action → **Load ReaScript…** →
-   select `LV1_Track_Importer.lua`.
-4. Run the action. (Assign it a keyboard shortcut or a toolbar button while
-   you're in the action list — it's the kind of tool you reach for at the
-   start of every session.)
+In REAPER: `Extensions` → `ReaPack` → `Import repositories…`, then paste this
+line and click OK:
 
-> **`LV1_Track_Importer.lua` and `lv1_fetch.js` must sit in the same folder.**
-> The ReaScript looks for the helper next to itself; a copy of only the `.lua`
-> installs cleanly and then fails at fetch time.
-
-<details>
-<summary>Installing from a clone instead (contributors)</summary>
-
-```powershell
-npm run deploy
+```
+https://raw.githubusercontent.com/malik-malassis/lv1-to-reaper/main/index.xml
 ```
 
-Copies the four distributed files to `%APPDATA%\REAPER\Scripts\lv1-reaper`,
-verifies each one by SHA-256, and removes any stale result file left over from
-a previous run. For a portable REAPER install:
-`./deploy.ps1 -Portable "D:\REAPER"`. PowerShell only — on macOS and Linux,
-copy the files by hand.
+Then `Extensions` → `ReaPack` → `Browse packages…` → type `LV1` →
+right-click → `Install` → `OK`.
 
-</details>
+You will get updates automatically from then on.
 
-## Usage
+### Or by hand
 
-On first launch nothing is selected yet, so **Scan network** is the lit button
-and **Fetch tracks** is disabled:
+1. Download **lv1-to-reaper-v2.1.0.zip** from the
+   [Releases page](https://github.com/malik-malassis/lv1-to-reaper/releases).
+2. In REAPER: `Options` → `Show REAPER resource path in explorer/finder`.
+   A folder window opens.
+3. Open the `Scripts` folder inside it, and unzip the download there. You
+   should end up with a `Scripts/lv1-reaper/` folder containing four files.
+4. In REAPER: `Actions` → `Show action list…` → `New action` →
+   `Load ReaScript…` → pick **LV1_Track_Importer.lua**.
 
-![The window on first launch, empty, with Scan network highlighted as the next
-step](docs/window.png)
+> Keep the two files together. `LV1_Track_Importer.lua` needs `lv1_fetch.js`
+> sitting right next to it — a copy of only the first one installs fine and
+> then fails when you try to fetch.
 
-1. **Scan network** finds every LV1 announcing itself on the LAN. Click yours
-   in the Devices list — it is remembered for the next session.
+**Tip:** while you are in the action list, give it a keyboard shortcut or put
+it on a toolbar. It is the kind of thing you reach for at the start of every
+session.
 
-   ![The Devices list after a scan, showing one console found with its
-   address](docs/scan.png)
+---
 
-2. **Fetch tracks** connects and reads the console.
-3. Filter with the search box, the group list, or **Hide unused** (which hides
-   channels still carrying an LV1 factory name like `Channel 12` or `Fx 3`).
-4. Tick what you want — **shift-click a checkbox to tick a whole range**.
-   Adjust name, Mono/Stereo or color inline; the **Input** column shows live
-   which hardware input each track will land on, and the footer turns red if
-   the selection needs more inputs than your audio device actually has.
-5. **Create N tracks**, or **Update existing** to refresh tracks a previous
-   run already created.
+## Using it
 
-The blue button is always the next step: **Scan network** until a console is
-selected, then **Fetch tracks**. Fetch stays disabled while no console is
-chosen. A console picked in an earlier session is restored from the settings
-and stays listed, so you don't have to rescan at every REAPER launch.
+Run the action. The blue button always tells you what to do next.
 
-Fetching runs in the background: REAPER stays usable, and the progress strip
-shows the helper's live log. A typical fetch takes 2–3 s because the helper
-stops as soon as the track list and meter frames have arrived, rather than
-always waiting out its full timeout.
+![The window on first launch: empty track list, Scan network highlighted in
+blue, Fetch tracks greyed out](docs/window.png)
 
-## Import options (Settings → Import)
+### 1. Find your console
 
-![The Import tab of the Settings dialog, showing record-input pre-patching with
-its console-accurate and linear modes, the LR record input field, and the
-naming, folder, arming and skip-existing options](docs/settings-import.png)
+Click **Scan network**. Every LV1 on the network appears in the list on the
+left. Click yours.
 
-| Option | What it does |
+![The Devices list showing one console found, with its network
+address](docs/scan.png)
+
+It is remembered from then on, so next time you can go straight to step 2.
+
+### 2. Read the channels
+
+Click **Fetch tracks**. Takes two or three seconds. REAPER stays usable while
+it works.
+
+### 3. Pick what you want to record
+
+- **Search box** — type a few letters to narrow the list.
+- **Sidebar** — click a group (Inputs, Aux, Masters…) to show only that one,
+  or tick its box to select the whole group at once.
+- **Hide unused** — hides channels still named `Channel 34`, `Fx 2` and so on,
+  the ones you never touched on the desk.
+- **Shift-click** a tick box to select everything between it and your last
+  click.
+
+Channels you renamed on the desk are pre-selected for you, since a renamed
+channel is usually a channel in use.
+
+You can also fix anything before creating: rename a track, switch it between
+Mono and Stereo, or click its colour square to change it.
+
+The **Input** column shows you, live, which physical input of your sound card
+each track will record from. The bar at the bottom sums it up, and turns red if
+you have asked for more inputs than your sound card actually has.
+
+### 4. Create them
+
+Click **Create N tracks**. Done.
+
+Run the importer again later and click **Update existing** instead: it
+refreshes the names, colours and inputs of the tracks it created before,
+without making duplicates.
+
+---
+
+## Settings worth knowing
+
+![The Import tab of the Settings window, with record input pre-patching, its
+console-accurate and linear modes, the LR record input box, and the naming,
+folder, arming and skip options](docs/settings-import.png)
+
+| Setting | What it means |
 |---|---|
-| **Pre-patch record inputs** | Assigns each `In` track's record input, mono/stereo aware. |
-| **Console-accurate** | Hardware inputs follow the real console layout — skipped channels leave gaps, stereo channels consume two slots. |
-| **Linear** | Selected channels are patched to a contiguous block starting at input 1. |
-| **LR record input** | 1-based hardware channel your main-mix analog return is wired to. Blank = LR gets no input. Specific to your rig, so it can't be auto-detected. |
-| **Prefix track names** | `01 KICK IN`, zero-padded so names sort correctly. |
-| **Group into folders** | Creates `LV1 INPUTS`, `LV1 GROUPS`, … folder tracks. |
-| **Arm for recording** | Record-arms every created track. |
-| **Skip already imported** | Created tracks are tagged with their LV1 identity, so re-running never duplicates them. |
+| **Pre-patch record inputs** | Each channel track is set to record from the matching input of your sound card. Stereo channels take two. |
+| **Console-accurate** | Inputs follow the real desk layout. Skip channel 5 and input 5 stays empty — what you record matches your patch sheet. |
+| **Linear** | The channels you picked go on inputs 1, 2, 3… with no gaps, whatever their number on the desk. |
+| **LR record input** | If you loop your main mix back into two inputs of your sound card, put the first one's number here. Leave blank if you don't. |
+| **Prefix track names** | Names come out as `01 KICK`, `02 SNARE`… so they stay in order. |
+| **Group into folders** | Puts the created tracks in folders: Inputs, Groups, Aux… Handy above thirty tracks. |
+| **Arm for recording** | Arms every created track straight away. |
+| **Skip already imported** | Stops the importer creating a second copy of a track it already made. |
 
-## Notes / limitations
+---
 
-- **DCA groups and internal `HidLink` channels are deliberately not imported**
-  — DCAs carry no audio of their own, and `HidLink` is an LV1-internal
-  pseudo-channel.
-- Mono/stereo is detected from the LV1's meter frames: a channel only ever
-  emits a right-channel VU if it really is a stereo pair. When no meter frame
-  arrives for a channel in time, the tool falls back to the stereo-width value
-  and **marks the row with `~`** so you know to check it. The LR bus is always
-  forced to stereo.
-- Colors come from `/Notify/TrackColor`. In practice the LV1 dumps them for
-  every channel on connect; a channel that somehow arrives without one gets a
-  grey swatch you can click to set manually.
-- Only channels with a resolved name are listed.
-- Record inputs are checked against `GetNumAudioInputs()`. REAPER accepts an
-  input index past the end of the device and simply shows an unusable entry,
-  which you'd discover when arming the track, so the footer flags the
-  mismatch before anything is created.
+## If something doesn't work
+
+**Scan network finds nothing.**
+Check the LV1 software is running and that remote control is enabled in its
+network settings. Then check both machines really are on the same network — a
+VPN, a guest Wi-Fi or two different switches will each break it. On Windows,
+the first time you run it you may get a firewall prompt: accept it. If you
+clicked "Cancel" once, Windows will keep refusing silently.
+
+**It finds the console but fetching fails.**
+Try again — the console changes its connection number every time it restarts,
+and the importer re-detects it automatically on the second try. If it still
+fails, another program may already be connected to the desk as a remote.
+
+**Nothing happens at all when you click Fetch.**
+Node.js is probably not installed, or REAPER can't find it. Open `Settings` →
+`Connection` and check the Node.js line. Then open `Settings` → `Advanced` and
+tick **Blocking mode**: REAPER will freeze for a few seconds but will show you
+the real error.
+
+**The bar at the bottom is red.**
+You have selected more channels than your sound card has inputs — counting two
+for every stereo channel. Either select fewer, or switch to **Linear** in the
+import settings, which packs them without gaps.
+
+**A track came out mono and should be stereo (or the reverse).**
+Just click Mono or Stereo on its row before creating. Rows marked with a small
+`~` are ones the importer had to guess — those are worth a look.
+
+Still stuck? Open `Settings` → `Advanced`, tick **Verbose diagnostic log**,
+fetch again, then copy what appears in the **Diagnostic log** panel at the
+bottom of the window into a
+[bug report](https://github.com/malik-malassis/lv1-to-reaper/issues). That log
+is what makes a problem fixable instead of guessable.
+
+---
+
+## Good to know
+
+- **DCA groups are not imported.** They control other channels, they carry no
+  audio of their own, so there is nothing to record.
+- **Mono or stereo is detected from the desk's meters** — a channel only shows
+  a right-hand meter if it really is stereo. When a channel stays silent long
+  enough that no meter arrives, the importer guesses and marks the row with
+  `~`. The main LR bus is always stereo.
+- **Colours come from the desk.** A channel that arrives without one gets a
+  grey square you can click.
+- Only channels that have a name are listed.
 
 ### What has actually been tested
 
-Development and testing were done against **one console: an LV1 in 64-channel
-mode, on Windows**, with a 109-track session (64 inputs, 8 groups, 24 aux/FX,
-8 matrix, LR/C/M, cue and talkback).
+One console: an **LV1 in 64-channel mode, on Windows**, with a 109-channel
+session. The 16, 32 and 80-channel modes, other LV1 versions, macOS and Linux
+should all work — nothing in it is tied to a channel count or a system — but
+none of them has been tried yet. If you run one of those, say so in the
+[issues](https://github.com/malik-malassis/lv1-to-reaper/issues), whether it
+worked or not. Both are useful.
 
-The 16, 32 and 80-channel modes, other LV1 versions, macOS and Linux are all
-*expected* to work — nothing in the code is specific to a channel count or a
-platform — but none of them has been run. If you try one, a report either way
-is genuinely useful; the diagnostic log (Settings → Advanced → Verbose) is
-what makes a bug report actionable.
+---
 
-The `/Channels` message layout is the part most likely to drift between LV1
-firmware versions. The helper auto-detects the argument stride rather than
-assuming the documented one, and says so in the log when it finds something
-other than 19 — so a firmware change should degrade to a warning rather than
-to an empty track list.
+## Questions, bugs, ideas
 
-## Troubleshooting
+[Open an issue](https://github.com/malik-malassis/lv1-to-reaper/issues). For
+anything connection-related, include the diagnostic log described above, plus
+which mode your LV1 is in (16/32/64/80 channels) and whether you are on Windows
+or Mac.
 
-**The LV1's OSC port is dynamic** — it changes every time the LV1 app restarts
-or the mixer mode changes (16/32/64/80ch). There is no default port, so it is
-always resolved from the zDNS announcement, even when you enter the IP by
-hand. If a saved port turns out to be stale, the helper re-resolves it and
-retries once automatically.
+This is maintained by one person around actual gigs, so answers may take a
+while.
 
-If nothing is found, check in order:
+---
 
-1. **Same subnet/VLAN.** zDNS multicast does not route across subnets, VLANs
-   or a VPN. REAPER in a NAT-networked VM/WSL will also fail — use bridged
-   networking.
-2. **Windows Firewall.** The first time `node.exe` opens a UDP socket, Windows
-   may prompt to allow it on Private networks — accept. If you never saw the
-   prompt, add an inbound rule for `node.exe` on Private networks manually.
-3. **Antivirus / third-party firewall** can silently drop multicast UDP.
-4. **Port 13337 already in use** — another LV1 tool or a Companion instance
-   holding it will be reported explicitly in the log.
-5. **LV1 app running** with OSC/remote control enabled in its network prefs.
-6. Turn on **Verbose diagnostic log** (Settings → Advanced) and re-fetch: the
-   log shows every raw `/zDNS` packet and every OSC message, which tells you
-   whether the problem is discovery (no packets at all) or the handshake (TCP
-   connects but no `/handshake` ACK).
-7. If the background launch fails silently, enable **blocking mode** (Settings
-   → Advanced): it runs the helper synchronously and surfaces the OS error.
+## Licence
 
-Run the helper straight from a terminal to see everything live:
+Free to use, share and modify for **anything non-commercial** — your own work,
+your band, teaching, associations, public institutions.
+**Selling it, or any part of it, or shipping it inside a product you sell, is
+not allowed.** Full text in [LICENSE](LICENSE).
 
-```bash
-node lv1_fetch.js --scan --verbose
-```
+It comes with no warranty. Try it on a rehearsal before you rely on it at a
+show.
 
-```bash
-node lv1_fetch.js --host 192.168.1.40 --verbose
-```
-
-## Development
-
-```bash
-npm test
-```
-
-33 checks: the OSC codec, the zDNS parser, the `/Channels` stride
-auto-detection and the mono/stereo decision logic — the parts that can't be
-verified by hand against a live console — plus a Lua parse of the ReaScript
-and the cross-file invariants (both halves agreeing on the JSON schema
-version, the ReaPack headers being present, the version matching
-`package.json`).
-
-The Lua parse matters more than it sounds: REAPER only reports a broken
-script when you trigger the action, the message is a bare line number, and an
-already-open script window keeps running the previous version — so a syntax
-error looks like "my change had no effect" long before it looks like an
-error. Run it alone with:
-
-```bash
-npm run lint:lua
-```
-
-Work on the UI with no mixer on the network by replaying a captured session:
-
-```bash
-npm run mock
-```
-
-This writes `lv1_tracks.json` from `test/fixtures/lv1_tracks.sample.json`
-(a real 109-track capture), which the ReaScript then reads normally. The
-window shows a red **REPLAYED CAPTURE** banner so a mock list can't be
-mistaken for a live one.
-
-### Publishing via ReaPack
-
-The script already carries the headers ReaPack needs (`@description`,
-`@author`, `@version`, `@provides`, `@about`, `@changelog`) — `npm test`
-fails if any goes missing or if `@version` drifts from `package.json`.
-
-To make the tool installable through ReaPack (in addition to the Releases
-download above), generate the index with
-[reapack-index](https://github.com/cfillion/reapack-index) (a Ruby gem) — the
-repository must be public:
-
-```bash
-gem install reapack-index && reapack-index --commit
-```
-
-It reads the headers from the git history and writes `index.xml`; users then
-add your repository's raw `index.xml` URL in ReaPack → Import repositories.
-Bump `@version` **and** `package.json` together for each release — the index
-keys off the header, and the test keys off both.
-
-### Helper CLI
-
-```
-node lv1_fetch.js [--host <ip>] [--port <n>] [--scan] [--mock <file>]
-                  [--discover-ms 6000] [--listen-ms 4000] [--min-listen-ms 1200]
-                  [--out lv1_tracks.json] [--log <file>] [--verbose]
-```
-
-Exit codes: `0` ok · `1` connect failed · `2` no LV1 found · `3` host never
-announced itself · `4` no handshake · `5` mock file unreadable.
-
-## Support
-
-Bugs and questions go to
-[Issues](https://github.com/malik-malassis/lv1-to-reaper/issues).
-
-For anything connection-related, attach the diagnostic log: Settings →
-Advanced → tick **Verbose diagnostic log**, fetch again, then copy the
-**Diagnostic log** panel. It contains every zDNS packet and OSC message
-exchanged, which is what makes the difference between a guess and a fix.
-Please also say which LV1 mode you're in (16/32/64/80 ch) and your OS.
-
-This is a tool one person maintains alongside actual gigs — no response-time
-promises. Pull requests are welcome; run `npm test` before opening one.
-
-## License
-
-[PolyForm Noncommercial 1.0.0](LICENSE) — free to use, modify and share for
-any noncommercial purpose: personal use, hobby projects, education, charities,
-public research and government institutions all qualify. **Selling it, or any
-part of it, or shipping it inside a commercial product or service, is not
-permitted** without a separate licence.
-
-Note that a restriction on commercial use means this is **source-available**
-software, not open source in the strict sense — the Open Source Definition
-does not allow restrictions on the field of use. The source is public, and it
-is free for the people it is written for.
-
-The OSC codec is used under the MIT License from
-[bitfocus/companion-module-waves-lv1](https://github.com/bitfocus/companion-module-waves-lv1);
-those portions remain under MIT. See [LICENSE](LICENSE) for details.
+The part that speaks the LV1's language was worked out by the
+[bitfocus/companion-module-waves-lv1](https://github.com/bitfocus/companion-module-waves-lv1)
+project and is reused here under their MIT licence. Without their work this
+tool would not exist.
 
 Waves and LV1 are trademarks of Waves Audio Ltd. REAPER is a trademark of
-Cockos Incorporated. This project is not affiliated with, endorsed by, or
-supported by either company. It reads from the console and never writes to it,
-but it comes with no warranty of any kind — test it before you rely on it at
-a show.
+Cockos Incorporated. This project has nothing to do with either company.
+
+---
+
+*Working on the code? See [DEVELOPMENT.md](DEVELOPMENT.md).*

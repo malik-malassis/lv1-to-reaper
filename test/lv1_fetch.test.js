@@ -1,6 +1,6 @@
 'use strict'
 
-// Unit tests for the pure parts of lv1_fetch.js — the OSC codec, the zDNS
+// Unit tests for the pure parts of lv1_fetch.js - the OSC codec, the zDNS
 // parser and the track-list builder. These are exactly the pieces that are
 // impossible to check by hand against a live console (you can't make an LV1
 // send you a malformed packet on demand), and the ones a firmware update is
@@ -188,7 +188,7 @@ test('channels with no name are dropped', () => {
 })
 
 test('a right-channel meter frame is what decides stereo, not the width knob', () => {
-	// width says "stereo", the meters say mono — the meters win.
+	// width says "stereo", the meters say mono - the meters win.
 	const [t] = lv1.buildTracks([ch({ name: 'SNARE', width: 0.8, hasRightMeter: false })])
 	assert.equal(t.stereo, false)
 	assert.equal(t.detect, 'meter')

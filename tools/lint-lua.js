@@ -5,7 +5,7 @@
 //
 // This matters more than it sounds: REAPER only reports a broken script when
 // you trigger the action, the message is a bare line number in a modal, and an
-// already-open script window keeps running the previous version — so a typo can
+// already-open script window keeps running the previous version - so a typo can
 // look like "my change had no effect" for a long time before it looks like an
 // error.
 //

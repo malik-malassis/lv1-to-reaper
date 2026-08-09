@@ -1,12 +1,12 @@
 name: Bug report
-description: Something doesn't work — a failed connection, wrong tracks, a REAPER error
+description: Something doesn't work - a failed connection, wrong tracks, a REAPER error
 labels: ["bug"]
 body:
   - type: markdown
     attributes:
       value: |
         Thanks for taking the time. The diagnostic log is what makes a
-        connection bug fixable rather than guessable — please include it.
+        connection bug fixable rather than guessable - please include it.
 
   - type: textarea
     id: what-happened
@@ -27,7 +27,7 @@ body:
         Settings → Advanced → tick "Verbose diagnostic log", fetch again, then
         copy the whole "Diagnostic log" panel. It contains every zDNS packet
         and OSC message exchanged. It also contains your LAN IP addresses and
-        your console's name — redact them if you'd rather not post them.
+        your console's name - redact them if you'd rather not post them.
       render: text
     validations:
       required: false
@@ -53,7 +53,7 @@ body:
     id: os
     attributes:
       label: Operating system
-      description: Only Windows has been tested so far — macOS and Linux reports are especially welcome.
+      description: Only Windows has been tested so far - macOS and Linux reports are especially welcome.
       options:
         - Windows
         - macOS

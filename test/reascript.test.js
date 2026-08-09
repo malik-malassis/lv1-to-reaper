@@ -2,8 +2,8 @@
 
 // Checks on the ReaScript half of the project. There is no way to unit-test
 // ReaImGui drawing code outside REAPER, but the two things that silently break
-// a release — a syntax error, and the two halves disagreeing about the file
-// format they exchange — are both checkable from here.
+// a release - a syntax error, and the two halves disagreeing about the file
+// format they exchange - are both checkable from here.
 
 const test = require('node:test')
 const assert = require('node:assert/strict')
@@ -35,7 +35,7 @@ test('both halves agree on the result-file schema version', () => {
 	assert.equal(
 		Number(declared[1]),
 		lv1.SCHEMA_VERSION,
-		'lv1_fetch.js and LV1_Track_Importer.lua disagree about the JSON schema version — ' +
+		'lv1_fetch.js and LV1_Track_Importer.lua disagree about the JSON schema version - ' +
 		'bump both, or the UI will refuse the file it is handed'
 	)
 })

@@ -39,7 +39,7 @@ if (block) {
 
 process.stdout.write(`${entries ? `## What's new\n\n${entries}\n\n` : ''}## Install
 
-**With ReaPack** — in REAPER: Extensions → ReaPack → Import repositories, paste
+**With ReaPack** - in REAPER: Extensions → ReaPack → Import repositories, paste
 
 \`\`\`
 https://raw.githubusercontent.com/${REPO}/main/index.xml
@@ -48,7 +48,7 @@ https://raw.githubusercontent.com/${REPO}/main/index.xml
 then Browse packages → search \`LV1\` → Install. Updates arrive automatically
 from then on.
 
-**By hand** — download the zip below. In REAPER: Options → Show REAPER resource
+**By hand** - download the zip below. In REAPER: Options → Show REAPER resource
 path, open the \`Scripts\` folder, unzip there. Then Actions → Show action list
 → New action → Load ReaScript → \`LV1_Track_Importer.lua\`.
 
@@ -60,7 +60,7 @@ and [Node.js](https://nodejs.org/) 16+. Full instructions in the
 
 ---
 
-The importer only reads your console — it cannot change a level, a name or a
+The importer only reads your console - it cannot change a level, a name or a
 routing on the desk.
 
 Free for any non-commercial use; not for sale. See

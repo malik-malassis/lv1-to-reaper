@@ -25,7 +25,7 @@
 // If --host/--port are omitted, the script performs a one-shot zDNS
 // multicast discovery (UDP 225.1.1.1:13337) to find the LV1 on the LAN.
 // If --host is given without --port, the LV1's OSC port is dynamic and
-// cannot be guessed — a filtered zDNS discovery is still run to resolve it.
+// cannot be guessed - a filtered zDNS discovery is still run to resolve it.
 // If --port is given but turns out to be stale (the LV1 restarted since it
 // was saved), the connection is automatically retried once after a fresh
 // discovery pass.
@@ -53,7 +53,7 @@ const ZDNS_PORT = 13337
 const LV1_SERVICE = '_waveslv113._tcp'
 
 // LV1 group ids that are never real, recordable tracks:
-//   12 = DCA (control groups — they carry no audio of their own)
+//   12 = DCA (control groups - they carry no audio of their own)
 //   24 = internal "HidLink:N" pseudo-channels exposed by the LV1 app
 const EXCLUDED_GROUPS = new Set([12, 24])
 const LR_GROUP = 3
@@ -68,7 +68,7 @@ const DEFAULTS = {
 }
 
 // Parses an integer CLI value, falling back to `def` (and reporting the
-// problem) rather than silently producing NaN — a NaN timeout would make
+// problem) rather than silently producing NaN - a NaN timeout would make
 // setTimeout fire immediately and turn a typo into a mysterious "no LV1
 // found" error.
 function intOpt(raw, def, name, warnings) {
@@ -350,7 +350,7 @@ function deviceMatches(dev, host) {
 //   timeoutMs  how long to listen at most
 //   matchHost  when set, resolve as soon as THIS host announces itself
 //              (typical: ~200 ms instead of burning the whole window)
-// Resolves to { devices, error } — a bind/multicast failure is reported
+// Resolves to { devices, error } - a bind/multicast failure is reported
 // instead of being swallowed into an empty, unexplained result.
 function discover({ timeoutMs, verbose, matchHost }) {
 	return new Promise((resolve) => {
@@ -382,7 +382,7 @@ function discover({ timeoutMs, verbose, matchHost }) {
 
 		socket.on('error', (err) => {
 			error = err.code === 'EADDRINUSE'
-				? `UDP port ${ZDNS_PORT} is already in use by another application — close it (another LV1 tool, a Companion instance...) and retry.`
+				? `UDP port ${ZDNS_PORT} is already in use by another application - close it (another LV1 tool, a Companion instance...) and retry.`
 				: `UDP socket error: ${err.message}`
 			say(`zDNS: ${error}`)
 			finish()
@@ -391,7 +391,7 @@ function discover({ timeoutMs, verbose, matchHost }) {
 		socket.on('message', (buf, rinfo) => {
 			const z = parseZDNS(buf)
 			if (!z) return
-			log(verbose, `zDNS: packet from ${rinfo.address} — service=${z.service} host=${z.host} port=${z.port} ipv4=[${z.ipv4s.join(',')}]`)
+			log(verbose, `zDNS: packet from ${rinfo.address} - service=${z.service} host=${z.host} port=${z.port} ipv4=[${z.ipv4s.join(',')}]`)
 			if (z.service !== LV1_SERVICE) return
 			const key = `${z.host}|${z.port}`
 			if (found.has(key)) return
@@ -419,8 +419,8 @@ function discover({ timeoutMs, verbose, matchHost }) {
 				}
 			}
 			if (joined === 0) {
-				error = 'could not join the multicast group on any network interface — no active IPv4 LAN adapter, or a firewall is blocking it.'
-				say(`zDNS: WARNING — ${error}`)
+				error = 'could not join the multicast group on any network interface - no active IPv4 LAN adapter, or a firewall is blocking it.'
+				say(`zDNS: WARNING - ${error}`)
 			}
 		})
 
@@ -433,7 +433,7 @@ function discover({ timeoutMs, verbose, matchHost }) {
 // The LV1's /Channels broadcast packs N tracks back to back with a fixed
 // number of OSC args per track. Upstream documents 19 (i s iidd iiiiiiiiiiii
 // hd), but that stride is the one part of the schema most likely to drift
-// between LV1 versions — and a wrong stride decodes to *nothing* rather than
+// between LV1 versions - and a wrong stride decodes to *nothing* rather than
 // to something obviously broken. So: try the documented stride first, then
 // any other stride whose every track slot starts with (string, int, int).
 function detectChannelStride(args, count) {
@@ -505,7 +505,7 @@ function connectAndFetch(host, port, { listenMs, minListenMs, verbose }) {
 			return
 		}
 		if (!Number.isInteger(port) || port <= 0 || port > 65535) {
-			reject(new Error(`connectAndFetch: invalid port (${port}). The LV1's OSC port is dynamic — it must come from zDNS discovery, it cannot be guessed.`))
+			reject(new Error(`connectAndFetch: invalid port (${port}). The LV1's OSC port is dynamic - it must come from zDNS discovery, it cannot be guessed.`))
 			return
 		}
 
@@ -533,7 +533,7 @@ function connectAndFetch(host, port, { listenMs, minListenMs, verbose }) {
 			let s = state.channels.get(key)
 			if (!s) {
 				// hasRightMeter tracks whether a /Notify/Meters frame with sub=1 (the
-				// right-channel VU) was ever seen for this channel — this is a far more
+				// right-channel VU) was ever seen for this channel - this is a far more
 				// reliable mono/stereo signal than the "width" field (which is really a
 				// stereo-image-width knob that can read >0 even on mono channels, and was
 				// observed to make every channel look "stereo"). null = not yet observed.
@@ -569,7 +569,7 @@ function connectAndFetch(host, port, { listenMs, minListenMs, verbose }) {
 		// Everything we need usually lands within ~1s: the bulk /Channels dump
 		// plus a couple of /Notify/Meters frames (needed for the mono/stereo
 		// detection). Stop as soon as both are in rather than always burning the
-		// full listen window — that alone cuts a typical fetch from ~10s to ~2s.
+		// full listen window - that alone cuts a typical fetch from ~10s to ~2s.
 		function maybeEarlyExit() {
 			if (finished || !registered) return
 			if (Date.now() - startedAt < minListenMs) return
@@ -587,7 +587,7 @@ function connectAndFetch(host, port, { listenMs, minListenMs, verbose }) {
 					if (!registered && intArg(m, 0) === 1) {
 						registered = true
 						state.registered = true
-						say('Handshake acknowledged — registered with the LV1.')
+						say('Handshake acknowledged - registered with the LV1.')
 						// Ask for topology once registered.
 						send('/Get/Aux/Tracks', [])
 						send('/Get/Layers', [{ type: 'i', value: 0 }, { type: 'i', value: 0 }])
@@ -624,7 +624,7 @@ function connectAndFetch(host, port, { listenMs, minListenMs, verbose }) {
 				}
 				case '/Notify/Meters': {
 					// args[0] = count, then (group, ch, sub, dB-float) per meter, repeated.
-					// sub=0 is the mono/left VU, sub=1 is the right-channel VU — a channel
+					// sub=0 is the mono/left VU, sub=1 is the right-channel VU - a channel
 					// only ever gets a sub=1 entry if it's actually a stereo pair, so this
 					// is the authoritative mono/stereo signal (unlike "width", which is a
 					// stereo-image knob that reads nonzero even on mono channels).
@@ -659,7 +659,7 @@ function connectAndFetch(host, port, { listenMs, minListenMs, verbose }) {
 					const parsed = parseChannelsMessage(m.args)
 					if (parsed.stride == null) {
 						if (parsed.count > 0) {
-							say(`WARNING: /Channels announced ${parsed.count} track(s) but none could be decoded — the LV1's message layout may have changed in this firmware version. Please report this with a --verbose log.`)
+							say(`WARNING: /Channels announced ${parsed.count} track(s) but none could be decoded - the LV1's message layout may have changed in this firmware version. Please report this with a --verbose log.`)
 						}
 						break
 					}
@@ -684,7 +684,7 @@ function connectAndFetch(host, port, { listenMs, minListenMs, verbose }) {
 			while (rxBuf.length >= 4 + HEADER_LEN) {
 				const size = rxBuf.readUInt32BE(0)
 				if (size === 0 || size > 16 * 1024 * 1024) {
-					// Not a plausible frame length — resync one byte at a time.
+					// Not a plausible frame length - resync one byte at a time.
 					rxBuf = rxBuf.subarray(1)
 					continue
 				}
@@ -748,7 +748,7 @@ function rgbToHex(c) {
 }
 
 // Turns the raw per-channel state into the flat track list the Reaper UI
-// consumes. Pure function — covered by test/lv1_fetch.test.js.
+// consumes. Pure function - covered by test/lv1_fetch.test.js.
 function buildTracks(channels) {
 	return [...channels]
 		.filter((t) => t.name != null && t.name !== '' && !EXCLUDED_GROUPS.has(t.group))
@@ -795,7 +795,7 @@ function writeResult(outPath, result) {
 	return abs
 }
 
-const USAGE = `lv1_fetch.js — fetch the track list from a Waves LV1 mixer
+const USAGE = `lv1_fetch.js - fetch the track list from a Waves LV1 mixer
 
   node lv1_fetch.js [options]
 
@@ -887,7 +887,7 @@ async function main() {
 				: 'No LV1 announced itself on the LAN during the scan. Check that the mixer is powered on, on the same subnet/VLAN, and that UDP multicast 225.1.1.1:13337 is not blocked by a firewall.'),
 			errorCode: devices.length > 0 ? null : 'NO_DEVICE',
 		})
-		say(`Scan finished: ${devices.length} LV1(s) found — written to ${outFile}`)
+		say(`Scan finished: ${devices.length} LV1(s) found - written to ${outFile}`)
 		return devices.length > 0 ? 0 : 2
 	}
 
@@ -899,7 +899,7 @@ async function main() {
 	// guessed or hardcoded.
 	if (!port) {
 		if (host) {
-			say(`Host given without port — running a filtered zDNS discovery for ${host} (up to ${opts.discoverMs} ms)...`)
+			say(`Host given without port - running a filtered zDNS discovery for ${host} (up to ${opts.discoverMs} ms)...`)
 		} else {
 			say(`Discovering the LV1 on the LAN (up to ${opts.discoverMs} ms)...`)
 		}
@@ -914,7 +914,7 @@ async function main() {
 					? devices.map((d) => `${d.name || '?'} @ ${d.address || '?'}:${d.port}`).join(', ')
 					: '(none)'
 				return fail(3, 'HOST_NOT_ANNOUNCED',
-					`No zDNS announcement found for host ${host}. The LV1's OSC port is dynamic and cannot be guessed — it must be discovered. ` +
+					`No zDNS announcement found for host ${host}. The LV1's OSC port is dynamic and cannot be guessed - it must be discovered. ` +
 					`LV1s seen on the LAN during this scan: ${seen}. ` +
 					(discoveryError ? `Discovery problem: ${discoveryError} ` : '') +
 					`Checklist: (1) this machine and the LV1 must be on the same subnet/VLAN, (2) UDP multicast 225.1.1.1:13337 must not be blocked ` +
@@ -929,13 +929,13 @@ async function main() {
 					(discoveryError ? `Discovery problem: ${discoveryError} ` : '') +
 					'Checklist: (1) the LV1 app must be running and on the same subnet/VLAN as this machine, (2) UDP multicast 225.1.1.1:13337 must not ' +
 					'be blocked by a firewall/router, (3) allow Node.js through the Windows Firewall (Private network) if prompted, (4) if discovery still ' +
-					"fails, enter the LV1's IP manually (the port can stay blank — it is still resolved by a filtered scan).")
+					"fails, enter the LV1's IP manually (the port can stay blank - it is still resolved by a filtered scan).")
 			}
 			const chosen = devices[0]
 			host = chosen.address || chosen.name
 			port = chosen.port
 			if (devices.length > 1) {
-				say(`WARNING: ${devices.length} LV1s are announcing themselves on this network. Auto-selected ${chosen.name || host} @ ${host}:${port} — pick a specific one in the device list if that is the wrong console.`)
+				say(`WARNING: ${devices.length} LV1s are announcing themselves on this network. Auto-selected ${chosen.name || host} @ ${host}:${port} - pick a specific one in the device list if that is the wrong console.`)
 			}
 			say(`Discovered LV1 at ${host}:${port}`)
 		}
@@ -954,10 +954,10 @@ async function main() {
 
 	// A saved/user-supplied port goes stale every time the LV1 app restarts.
 	// Rather than making that the user's problem, transparently re-resolve it
-	// once and retry — this is by far the most common failure in the field.
+	// once and retry - this is by far the most common failure in the field.
 	const staleLikely = !state || !state.registered
 	if (staleLikely && opts.port) {
-		say('The supplied port did not work — re-resolving it via zDNS and retrying once...')
+		say('The supplied port did not work - re-resolving it via zDNS and retrying once...')
 		const res = await discover({ timeoutMs: opts.discoverMs, verbose: opts.verbose, matchHost: host })
 		if (res.devices.length) devices = res.devices
 		if (res.error) discoveryError = res.error
@@ -1010,7 +1010,7 @@ async function main() {
 	}
 
 	const outFile = writeResult(opts.out, result)
-	say(`Wrote ${tracks.length} track(s) to ${outFile} in ${result.elapsedMs} ms` + (guessed ? ` (${guessed} track(s) had their mono/stereo width guessed — check them in the UI)` : ''))
+	say(`Wrote ${tracks.length} track(s) to ${outFile} in ${result.elapsedMs} ms` + (guessed ? ` (${guessed} track(s) had their mono/stereo width guessed - check them in the UI)` : ''))
 	return 0
 }
 

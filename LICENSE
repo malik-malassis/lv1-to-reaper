@@ -5,7 +5,7 @@ Licensed under the PolyForm Noncommercial License 1.0.0, reproduced in full
 below.
 
 In plain terms: you may use, study, modify and share this software freely for
-any noncommercial purpose — personal use, hobby projects, education, charities,
+any noncommercial purpose - personal use, hobby projects, education, charities,
 public research and government institutions all qualify. Selling it, selling
 any part of it, or using it as part of a commercial product or service is not
 permitted without a separate licence from the copyright holder.
@@ -135,9 +135,9 @@ these terms.
 
 THIRD-PARTY COMPONENTS
 
-The OSC 1.0 encoder/decoder in lv1_fetch.js — `padTo4`, `encodeString`,
+The OSC 1.0 encoder/decoder in lv1_fetch.js - `padTo4`, `encodeString`,
 `encodeMessage`, `readString`, `decodeMessage` and the `intArg` / `stringArg`
-accessors — is a JavaScript port of `src/osc.ts` from the
+accessors - is a JavaScript port of `src/osc.ts` from the
 bitfocus/companion-module-waves-lv1 project. The Waves LV1 wire protocol
 implemented here (zDNS multicast discovery, the OSC-over-TCP framing, the
 MyFOH-style handshake, and the `/Channels`, `/Notify/Meters` and

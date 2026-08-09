@@ -14,7 +14,7 @@ split in two halves that talk through a JSON file.
 | **`LV1_Track_Importer.lua`** | The REAPER side, built on [ReaImGui](https://github.com/cfillion/reaimgui). Launches the helper detached and polls its output, so REAPER never freezes. |
 
 The result file is written atomically (temp file then rename), and the ReaScript
-deletes it before every run — otherwise a failed fetch would silently display
+deletes it before every run - otherwise a failed fetch would silently display
 the previous run's track list.
 
 The LV1 protocol was reverse-engineered by
@@ -30,8 +30,8 @@ npm test
 ```
 
 33 checks covering the OSC codec, the zDNS parser, the `/Channels` stride
-auto-detection and the mono/stereo decision logic — the parts that cannot be
-verified by hand against a live console — plus a Lua parse of the ReaScript and
+auto-detection and the mono/stereo decision logic - the parts that cannot be
+verified by hand against a live console - plus a Lua parse of the ReaScript and
 the cross-file invariants: both halves agreeing on the JSON schema version, the
 ReaPack headers being present, `@version` matching `package.json`.
 
@@ -39,7 +39,7 @@ That last check has already caught a real drift on its first run.
 
 The Lua parse matters more than it sounds. REAPER only reports a broken script
 when you trigger the action, the message is a bare line number, and an
-already-open script window keeps running the previous version — so a syntax
+already-open script window keeps running the previous version - so a syntax
 error looks like "my change had no effect" long before it looks like an error.
 
 ```bash
@@ -67,7 +67,7 @@ verifies each by SHA-256, and clears any stale result file. PowerShell only;
 `./deploy.ps1 -Portable "D:\REAPER"` for a portable install.
 
 **A running script keeps the code it was loaded with.** After deploying, close
-the importer window and re-run the action — otherwise you are still looking at
+the importer window and re-run the action - otherwise you are still looking at
 the previous version, which is an easy hour to lose.
 
 ## Helper CLI
@@ -98,7 +98,7 @@ That is the whole procedure. `.github/workflows/release.yml` takes over from
 the tag and does the rest:
 
 - runs the tests, so a broken tag never becomes a release;
-- regenerates `index.xml` — and **fails if the tag and `@version` disagree**,
+- regenerates `index.xml` - and **fails if the tag and `@version` disagree**,
   before anything is published;
 - builds `lv1-to-reaper-v2.2.0.zip` from the tag with `git archive`;
 - writes the release notes from the `@changelog` block;
@@ -110,8 +110,8 @@ the tag, so it has to be regenerated every time; forget it and ReaPack keeps
 offering the previous version, with no error shown anywhere.
 
 `git archive` is used rather than `zip` or `Compress-Archive` because it writes
-spec-compliant entry names — PowerShell's `Compress-Archive`, the .NET zip API
-and `tar -a` each produce something broken or non-portable on Windows — and
+spec-compliant entry names - PowerShell's `Compress-Archive`, the .NET zip API
+and `tar -a` each produce something broken or non-portable on Windows - and
 because it takes the files from the tag, so the archive cannot drift from what
 was tagged.
 

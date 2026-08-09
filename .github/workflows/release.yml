@@ -5,7 +5,7 @@ name: Release
 #   git tag -a v2.2.0 -m "v2.2.0" && git push origin main --tags
 #
 # The step that matters most is the last one. index.xml pins the commit SHA of
-# the tag, so it has to be regenerated for every version — and forgetting it
+# the tag, so it has to be regenerated for every version - and forgetting it
 # leaves ReaPack users on the old release with no error shown anywhere. That is
 # exactly the kind of step a human forgets and a workflow does not.
 

@@ -1,6 +1,6 @@
 # LV1 → REAPER
 
-**Build your REAPER recording session straight from your Waves LV1 — names,
+**Build your REAPER recording session straight from your Waves LV1 - names,
 colours, mono/stereo and input patching included. About ten seconds instead of
 half an hour.**
 
@@ -46,7 +46,7 @@ during a soundcheck cannot alter your mix.
 
 Three things, all free, all one-time.
 
-**1. ReaImGui** — an add-on that lets scripts draw proper windows in REAPER.
+**1. ReaImGui** - an add-on that lets scripts draw proper windows in REAPER.
 
 In REAPER: `Extensions` → `ReaPack` → `Browse packages…` → type `ReaImGui` →
 right-click the one by **cfillion** → `Install` → `OK` → restart REAPER.
@@ -54,7 +54,7 @@ right-click the one by **cfillion** → `Install` → `OK` → restart REAPER.
 > No ReaPack menu? Install it first from [reapack.com](https://reapack.com),
 > then restart REAPER.
 
-**2. Node.js** — a small free program the importer uses to talk to your console
+**2. Node.js** - a small free program the importer uses to talk to your console
 over the network. You will never open it yourself.
 
 Download it from [nodejs.org](https://nodejs.org/) (the button on the left),
@@ -67,7 +67,7 @@ router. Not through a VPN, not on a different Wi-Fi.
 
 ## Install
 
-### The easy way — ReaPack
+### The easy way - ReaPack
 
 In REAPER: `Extensions` → `ReaPack` → `Import repositories…`, then paste this
 line and click OK:
@@ -93,7 +93,7 @@ You will get updates automatically from then on.
    `Load ReaScript…` → pick **LV1_Track_Importer.lua**.
 
 > Keep the two files together. `LV1_Track_Importer.lua` needs `lv1_fetch.js`
-> sitting right next to it — a copy of only the first one installs fine and
+> sitting right next to it - a copy of only the first one installs fine and
 > then fails when you try to fetch.
 
 **Tip:** while you are in the action list, give it a keyboard shortcut or put
@@ -126,10 +126,10 @@ it works.
 
 ### 3. Pick what you want to record
 
-- **Search box** — type a few letters to narrow the list.
-- **Sidebar** — click a group (Inputs, Aux, Masters…) to show only that one,
+- **Search box** - type a few letters to narrow the list.
+- **Sidebar** - click a group (Inputs, Aux, Masters…) to show only that one,
   or tick its box to select the whole group at once.
-- **Hide unused** — hides channels still named `Channel 34`, `Fx 2` and so on,
+- **Hide unused** - hides channels still named `Channel 34`, `Fx 2` and so on,
   the ones you never touched on the desk.
 - **Shift-click** a tick box to select everything between it and your last
   click.
@@ -163,7 +163,7 @@ folder, arming and skip options](docs/settings-import.png)
 | Setting | What it means |
 |---|---|
 | **Pre-patch record inputs** | Each channel track is set to record from the matching input of your sound card. Stereo channels take two. |
-| **Console-accurate** | Inputs follow the real desk layout. Skip channel 5 and input 5 stays empty — what you record matches your patch sheet. |
+| **Console-accurate** | Inputs follow the real desk layout. Skip channel 5 and input 5 stays empty - what you record matches your patch sheet. |
 | **Linear** | The channels you picked go on inputs 1, 2, 3… with no gaps, whatever their number on the desk. |
 | **LR record input** | If you loop your main mix back into two inputs of your sound card, put the first one's number here. Leave blank if you don't. |
 | **Prefix track names** | Names come out as `01 KICK`, `02 SNARE`… so they stay in order. |
@@ -177,13 +177,13 @@ folder, arming and skip options](docs/settings-import.png)
 
 **Scan network finds nothing.**
 Check the LV1 software is running and that remote control is enabled in its
-network settings. Then check both machines really are on the same network — a
+network settings. Then check both machines really are on the same network - a
 VPN, a guest Wi-Fi or two different switches will each break it. On Windows,
 the first time you run it you may get a firewall prompt: accept it. If you
 clicked "Cancel" once, Windows will keep refusing silently.
 
 **It finds the console but fetching fails.**
-Try again — the console changes its connection number every time it restarts,
+Try again - the console changes its connection number every time it restarts,
 and the importer re-detects it automatically on the second try. If it still
 fails, another program may already be connected to the desk as a remote.
 
@@ -194,13 +194,13 @@ tick **Blocking mode**: REAPER will freeze for a few seconds but will show you
 the real error.
 
 **The bar at the bottom is red.**
-You have selected more channels than your sound card has inputs — counting two
+You have selected more channels than your sound card has inputs - counting two
 for every stereo channel. Either select fewer, or switch to **Linear** in the
 import settings, which packs them without gaps.
 
 **A track came out mono and should be stereo (or the reverse).**
 Just click Mono or Stereo on its row before creating. Rows marked with a small
-`~` are ones the importer had to guess — those are worth a look.
+`~` are ones the importer had to guess - those are worth a look.
 
 Still stuck? Open `Settings` → `Advanced`, tick **Verbose diagnostic log**,
 fetch again, then copy what appears in the **Diagnostic log** panel at the
@@ -214,7 +214,7 @@ is what makes a problem fixable instead of guessable.
 
 - **DCA groups are not imported.** They control other channels, they carry no
   audio of their own, so there is nothing to record.
-- **Mono or stereo is detected from the desk's meters** — a channel only shows
+- **Mono or stereo is detected from the desk's meters** - a channel only shows
   a right-hand meter if it really is stereo. When a channel stays silent long
   enough that no meter arrives, the importer guesses and marks the row with
   `~`. The main LR bus is always stereo.
@@ -226,7 +226,7 @@ is what makes a problem fixable instead of guessable.
 
 One console: an **LV1 in 64-channel mode, on Windows**, with a 109-channel
 session. The 16, 32 and 80-channel modes, other LV1 versions, macOS and Linux
-should all work — nothing in it is tied to a channel count or a system — but
+should all work - nothing in it is tied to a channel count or a system - but
 none of them has been tried yet. If you run one of those, say so in the
 [issues](https://github.com/malik-malassis/lv1-to-reaper/issues), whether it
 worked or not. Both are useful.
@@ -247,7 +247,7 @@ while.
 
 ## Licence
 
-Free to use, share and modify for **anything non-commercial** — your own work,
+Free to use, share and modify for **anything non-commercial** - your own work,
 your band, teaching, associations, public institutions.
 **Selling it, or any part of it, or shipping it inside a product you sell, is
 not allowed.** Full text in [LICENSE](LICENSE).

@@ -7,7 +7,7 @@ body:
     attributes:
       label: What are you trying to do?
       description: >
-        Describe the situation rather than the solution — the workflow you're
+        Describe the situation rather than the solution - the workflow you're
         stuck on is usually more useful than a proposed button.
       placeholder: |
         Before every show I import the same 20 channels out of 64, and I
@@ -19,6 +19,6 @@ body:
     id: idea
     attributes:
       label: What did you have in mind?
-      description: Optional — a rough idea of how it might work.
+      description: Optional - a rough idea of how it might work.
     validations:
       required: false

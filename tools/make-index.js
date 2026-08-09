@@ -5,7 +5,7 @@
 // and where to download them.
 //
 // The <source> URLs pin the commit SHA of the tag rather than a branch, so an
-// install always gets the exact files that version was tested with — which
+// install always gets the exact files that version was tested with - which
 // also means this file MUST be regenerated for every release. Forgetting it
 // leaves ReaPack users silently on the old version, with no error anywhere.
 //
@@ -53,7 +53,7 @@ if (!version || !desc) fail(`could not read @version / @description from ${MAIN}
 // The tag and the script header must agree, or ReaPack would advertise a
 // version number that does not match the file it hands out.
 if (tag.replace(/^v/, '') !== version) {
-	fail(`tag ${tag} does not match @version ${version} in ${MAIN} — bump one of them`)
+	fail(`tag ${tag} does not match @version ${version} in ${MAIN} - bump one of them`)
 }
 
 // Pull out the changelog entries for this version only, stopping at the next

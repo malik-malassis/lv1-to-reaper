@@ -47,7 +47,7 @@ local SEP = IS_WIN and "\\" or "/"
 
 -- The result/log files live next to the script when that folder is writable
 -- (easiest to find when troubleshooting), otherwise in REAPER's own resource
--- folder — the script directory can be read-only when installed system-wide.
+-- folder - the script directory can be read-only when installed system-wide.
 local function isWritable(dir)
 	local probe = dir .. ".lv1_write_test"
 	local f = io.open(probe, "w")
@@ -109,7 +109,7 @@ do
 	--   __index = function(_, key) error("attempt to access a nil value ...") end
 	-- Every optional-feature probe in this script (`if ImGui.Foo then`, and the
 	-- enum lookups in E) would therefore abort the frame on any ReaImGui build
-	-- that happens not to expose one name — and pushTheme() runs outside the
+	-- that happens not to expose one name - and pushTheme() runs outside the
 	-- per-frame pcall, so a single missing colour enum would kill the whole
 	-- script. Wrap it so a missing name reads as nil again, caching the hits.
 	ImGui = setmetatable({}, {
@@ -167,7 +167,7 @@ local COL = {
 -- strings, numbers, booleans, null). Not a general-purpose parser.
 
 -- Encodes a Unicode code point as UTF-8. The previous implementation used
--- string.char(code), which produces a raw Latin-1 byte — that turns any
+-- string.char(code), which produces a raw Latin-1 byte - that turns any
 -- escaped accented character into mojibake in REAPER's track names.
 local function utf8Encode(code)
 	if code < 0x80 then
@@ -512,7 +512,7 @@ end
 
 -- ═══════════════════════════════════ record input mapping ══════════════
 -- Builds a map from LV1 "In" channel index to the 0-based hardware input slot.
---   "console": mirrors the real console input layout — iterates ALL fetched
+--   "console": mirrors the real console input layout - iterates ALL fetched
 --     "In" channels (selected or not), so a stereo channel shifts everything
 --     after it by one extra slot and skipped channels leave gaps.
 --   "linear": iterates only the SELECTED "In" channels and assigns sequential
@@ -654,7 +654,7 @@ applyResult = function(kind, blocking)
 	local fileLog = readFile(LOG_OUT)
 	if fileLog and fileLog ~= "" then lastLog = fileLog end
 	if lastLog == "" then
-		lastLog = "(no output captured — check that Node.js is installed and on PATH, or set its full path in Settings)"
+		lastLog = "(no output captured - check that Node.js is installed and on PATH, or set its full path in Settings)"
 	end
 
 	if not content then
@@ -682,7 +682,7 @@ applyResult = function(kind, blocking)
 
 	if data.schemaVersion and data.schemaVersion > SCHEMA_VERSION then
 		setStatus("error", string.format(
-			"lv1_fetch.js is newer than this script (schema %d vs %d) — update LV1_Track_Importer.lua.",
+			"lv1_fetch.js is newer than this script (schema %d vs %d) - update LV1_Track_Importer.lua.",
 			data.schemaVersion, SCHEMA_VERSION))
 		return
 	end
@@ -752,11 +752,11 @@ applyResult = function(kind, blocking)
 	local msg = string.format("Fetched %d tracks from %s", #tracks, where)
 	if data.elapsedMs then msg = msg .. string.format(" in %.1fs", data.elapsedMs / 1000) end
 	if (data.widthGuessedCount or 0) > 0 then
-		msg = msg .. string.format(" — %d track(s) had their mono/stereo guessed, marked with ~", data.widthGuessedCount)
+		msg = msg .. string.format(" - %d track(s) had their mono/stereo guessed, marked with ~", data.widthGuessedCount)
 	end
 	setStatus(data.error and "error" or "ok", data.error and (msg .. ". " .. data.error) or (msg .. "."))
 	if data.ambiguous then
-		setStatus("ok", msg .. string.format(". Note: %d LV1s are on this network — check the device list.", #devices))
+		setStatus("ok", msg .. string.format(". Note: %d LV1s are on this network - check the device list.", #devices))
 	end
 end
 
@@ -784,7 +784,7 @@ local function pollJob()
 		local kind = job.kind
 		job = nil
 		if lastLog == "" then
-			setStatus("error", "Timed out and the helper never wrote anything — Node.js probably didn't start. Check the Node path in Settings, or enable blocking mode there to see the OS error.")
+			setStatus("error", "Timed out and the helper never wrote anything - Node.js probably didn't start. Check the Node path in Settings, or enable blocking mode there to see the OS error.")
 			showSettings = true
 		else
 			setStatus("error", "Timed out waiting for " .. kind .. " to finish. See the diagnostic log below.")
@@ -847,7 +847,7 @@ local function applyTrackSettings(tr, t, label, hwMap)
 		local hw = hwMap[t.ch] or t.ch
 		reaper.SetMediaTrackInfo_Value(tr, "I_RECINPUT", t.stereo and (1024 + hw) or hw)
 	elseif t.group == GROUP_LR then
-		-- LR is a mix bus, not a hardware input — except that many live
+		-- LR is a mix bus, not a hardware input - except that many live
 		-- multitrack rigs also record the main mix through a dedicated analog
 		-- return. That wiring is specific to each setup and can't be detected,
 		-- hence the configurable 1-based channel number.
@@ -874,7 +874,7 @@ end
 
 -- PreventUIRefresh is a counter and Undo_BeginBlock opens a project-wide block:
 -- if the body between them throws, REAPER stops refreshing its track list and
--- arrange view for the rest of the session and the undo block never closes —
+-- arrange view for the rest of the session and the undo block never closes -
 -- with nothing on screen to explain it, since the caller runs inside the
 -- per-frame pcall that swallows the error. So the body is always guarded and
 -- the closers always run.
@@ -957,7 +957,7 @@ local function createSelectedTracks()
 
 	if not ok then
 		setStatus("error", string.format(
-			"Track creation failed after %d track(s) — see the REAPER console. Undo to roll back.", created))
+			"Track creation failed after %d track(s) - see the REAPER console. Undo to roll back.", created))
 		return
 	end
 
@@ -990,9 +990,9 @@ local function updateExistingTracks()
 
 	if not ok then
 		setStatus("error", string.format(
-			"Update failed after %d track(s) — see the REAPER console. Undo to roll back.", updated))
+			"Update failed after %d track(s) - see the REAPER console. Undo to roll back.", updated))
 	elseif updated == 0 then
-		setStatus("error", "No previously imported LV1 track found in this project — use \"Create tracks\" first.")
+		setStatus("error", "No previously imported LV1 track found in this project - use \"Create tracks\" first.")
 	else
 		local msg = string.format("Updated %d existing track%s.", updated, updated == 1 and "" or "s")
 		if missing > 0 then msg = msg .. string.format(" %d selected track%s not in the project yet.", missing, missing == 1 and " is" or "s are") end

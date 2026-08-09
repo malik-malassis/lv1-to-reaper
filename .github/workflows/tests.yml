@@ -1,7 +1,7 @@
 name: Tests
 
 # Runs on the three desktop systems REAPER supports. Only Windows has ever
-# been tried against a real console, so the README says so — but at least the
+# been tried against a real console, so the README says so - but at least the
 # parts that can be tested without a mixer are checked everywhere, which is
 # what would catch a path or line-ending assumption creeping into the helper.
 

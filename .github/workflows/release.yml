@@ -49,7 +49,7 @@ jobs:
         run: |
           git archive --format=zip --prefix=lv1-reaper/ \
             -o "lv1-to-reaper-$TAG.zip" "$TAG" \
-            LV1_Track_Importer.lua lv1_fetch.js README.md LICENSE
+            LV1_Track_Importer.lua lv1_fetch.js install.ps1 install.sh README.md LICENSE
           unzip -l "lv1-to-reaper-$TAG.zip"
         env:
           TAG: ${{ github.ref_name }}

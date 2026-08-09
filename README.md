@@ -44,7 +44,11 @@ during a soundcheck cannot alter your mix.
 
 ## Before you start
 
-Four things, all free, all one-time. Do them in this order.
+Four things, all free, all one-time.
+
+> **In a hurry?** The [installer script](#the-fastest-way-the-installer) below
+> does steps 1 to 3 for you. Read on only if you would rather do them by hand,
+> or if the script did not work.
 
 ### 1. ReaPack
 
@@ -94,7 +98,39 @@ Same switch, same router. Not through a VPN, not on a different Wi-Fi.
 
 ## Install
 
-### The easy way - ReaPack
+### The fastest way: the installer
+
+One command that installs ReaPack, ReaImGui and the importer, checks for
+Node.js, and tells you what is left. It needs no admin rights: everything is
+written inside REAPER's own folder.
+
+**Quit REAPER first** (extensions are only read when it starts).
+
+Download the repository as a ZIP from the
+[green Code button](https://github.com/malik-malassis/lv1-to-reaper/archive/refs/heads/main.zip),
+unzip it, then open a terminal in that folder and run:
+
+**Windows** (PowerShell)
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install.ps1
+```
+
+**Mac and Linux**
+
+```bash
+sh install.sh
+```
+
+Add `-DryRun` (Windows) or `--dry-run` (Mac, Linux) to see what it would do
+without touching anything. If REAPER is installed somewhere unusual, or you
+use a portable install, pass `-ResourcePath` / `--resource-path` followed by
+the folder REAPER shows under `Options` → `Show REAPER resource path`.
+
+Then start REAPER and load the action, as described in step 4 of "Or by hand"
+below.
+
+### If you already have ReaPack
 
 In REAPER: `Extensions` → `ReaPack` → `Import repositories…`, then paste this
 line and click OK:
@@ -115,7 +151,7 @@ You will get updates automatically from then on.
 2. In REAPER: `Options` → `Show REAPER resource path in explorer/finder`.
    A folder window opens.
 3. Open the `Scripts` folder inside it, and unzip the download there. You
-   should end up with a `Scripts/lv1-reaper/` folder containing four files.
+   should end up with a `Scripts/lv1-reaper/` folder containing the files.
 4. In REAPER: `Actions` → `Show action list…` → `New action` →
    `Load ReaScript…` → pick **LV1_Track_Importer.lua**.
 

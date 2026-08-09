@@ -14,6 +14,20 @@ You pick which channels you want. It creates them in REAPER, already named,
 already coloured the same as on the desk, already mono or stereo, already
 patched to the right inputs.
 
+## See it work
+
+From switching MyRemote on in the LV1 to a finished REAPER session, in about
+thirty seconds:
+
+![Screen recording: MyRemote is enabled in the LV1's routing view, the importer
+is loaded as a REAPER action, it scans the network and finds the console, reads
+109 channels, and creates the selected tracks in the
+project.](docs/demo.gif)
+
+*The same recording in full quality is attached to the
+[latest release](https://github.com/malik-malassis/lv1-to-reaper/releases/latest)
+as `lv1-to-reaper-demo.mp4`.*
+
 ---
 
 ## It reads your console. It never changes it.

@@ -20,7 +20,9 @@
     "scan": "node lv1_fetch.js --scan --verbose",
     "fetch": "node lv1_fetch.js --verbose",
     "mock": "node lv1_fetch.js --mock test/fixtures/lv1_tracks.sample.json --verbose",
-    "deploy": "powershell -ExecutionPolicy Bypass -File ./deploy.ps1"
+    "deploy": "powershell -ExecutionPolicy Bypass -File ./deploy.ps1",
+    "index": "node tools/make-index.js",
+    "notes": "node tools/changelog.js"
   },
   "engines": {
     "node": ">=16"

@@ -87,22 +87,37 @@ and OSC message.
 ## Cutting a release
 
 1. Bump the version in **both** `LV1_Track_Importer.lua` (`@version`, plus a
-   `@changelog` entry) and `package.json`. `npm test` fails if they disagree.
-2. `npm test`
-3. Tag and push:
+   `@changelog` entry under the new number) and `package.json`. `npm test`
+   fails if the two disagree.
+2. Commit, then tag and push:
    ```bash
    git tag -a v2.2.0 -m "v2.2.0" && git push origin main --tags
    ```
-4. Build the archive from the tag — `git archive` is used deliberately, because
-   `Compress-Archive`, the .NET zip API and `tar -a` each produce something
-   broken or non-portable on Windows:
-   ```bash
-   git archive --format=zip --prefix=lv1-reaper/ -o lv1-to-reaper-v2.2.0.zip v2.2.0 LV1_Track_Importer.lua lv1_fetch.js README.md LICENSE
-   ```
-5. `gh release create v2.2.0 lv1-to-reaper-v2.2.0.zip --title "v2.2.0" --notes-file notes.md`
-6. **Regenerate `index.xml`**, or ReaPack users will keep being offered the old
-   version. Its `<source>` URLs pin the commit SHA of the tag, so they must be
-   updated for every release.
 
-Step 6 is the one that gets forgotten. Automating steps 3–6 in a GitHub Actions
-workflow triggered by the tag is the obvious next improvement.
+That is the whole procedure. `.github/workflows/release.yml` takes over from
+the tag and does the rest:
+
+- runs the tests, so a broken tag never becomes a release;
+- regenerates `index.xml` — and **fails if the tag and `@version` disagree**,
+  before anything is published;
+- builds `lv1-to-reaper-v2.2.0.zip` from the tag with `git archive`;
+- writes the release notes from the `@changelog` block;
+- creates the GitHub release with the archive attached;
+- commits the refreshed `index.xml` back to `main`.
+
+That last step is the one worth automating. `index.xml` pins the commit SHA of
+the tag, so it has to be regenerated every time; forget it and ReaPack keeps
+offering the previous version, with no error shown anywhere.
+
+`git archive` is used rather than `zip` or `Compress-Archive` because it writes
+spec-compliant entry names — PowerShell's `Compress-Archive`, the .NET zip API
+and `tar -a` each produce something broken or non-portable on Windows — and
+because it takes the files from the tag, so the archive cannot drift from what
+was tagged.
+
+To run the pieces by hand:
+
+```bash
+npm run index    # regenerate index.xml for the latest tag
+npm run notes    # print the release notes to stdout
+```

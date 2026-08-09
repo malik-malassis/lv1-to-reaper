@@ -1,0 +1,35 @@
+name: Tests
+
+# Runs on the three desktop systems REAPER supports. Only Windows has ever
+# been tried against a real console, so the README says so — but at least the
+# parts that can be tested without a mixer are checked everywhere, which is
+# what would catch a path or line-ending assumption creeping into the helper.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      # Parses the ReaScript and runs the unit tests. See DEVELOPMENT.md.
+      - run: npm test

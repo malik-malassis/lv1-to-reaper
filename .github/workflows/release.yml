@@ -1,0 +1,89 @@
+name: Release
+
+# Push a tag, get a release. Everything that used to be a manual checklist:
+#
+#   git tag -a v2.2.0 -m "v2.2.0" && git push origin main --tags
+#
+# The step that matters most is the last one. index.xml pins the commit SHA of
+# the tag, so it has to be regenerated for every version — and forgetting it
+# leaves ReaPack users on the old release with no error shown anywhere. That is
+# exactly the kind of step a human forgets and a workflow does not.
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # git archive needs the tag, and make-index needs the history.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      # A tag that fails the tests never becomes a release.
+      - run: npm test
+
+      # Also fails if the tag and the @version header disagree, before
+      # anything has been published.
+      - name: Regenerate the ReaPack index
+        run: node tools/make-index.js "$TAG"
+        env:
+          TAG: ${{ github.ref_name }}
+
+      # git archive rather than zip/Compress-Archive: it writes spec-compliant
+      # entry names, and it takes the files from the tag rather than from the
+      # working tree, so the archive cannot drift from what was tagged.
+      - name: Build the archive
+        run: |
+          git archive --format=zip --prefix=lv1-reaper/ \
+            -o "lv1-to-reaper-$TAG.zip" "$TAG" \
+            LV1_Track_Importer.lua lv1_fetch.js README.md LICENSE
+          unzip -l "lv1-to-reaper-$TAG.zip"
+        env:
+          TAG: ${{ github.ref_name }}
+
+      - name: Write the release notes
+        run: node tools/changelog.js > RELEASE_NOTES.md
+
+      - name: Publish the release
+        run: |
+          gh release create "$TAG" "lv1-to-reaper-$TAG.zip" \
+            --title "$TAG" \
+            --notes-file RELEASE_NOTES.md \
+            --verify-tag \
+            --latest
+        env:
+          TAG: ${{ github.ref_name }}
+          GH_TOKEN: ${{ github.token }}
+
+      # The index has to live on the default branch, since that is the URL
+      # people paste into ReaPack.
+      - name: Commit the index back to main
+        run: |
+          cp index.xml "$RUNNER_TEMP/index.xml"
+          git config user.name  'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin main
+          git checkout -B main origin/main
+          cp "$RUNNER_TEMP/index.xml" index.xml
+          git add index.xml
+          if git diff --cached --quiet; then
+            echo "index.xml already up to date"
+          else
+            git commit -m "chore: update the ReaPack index for $TAG"
+            git push origin main
+          fi
+        env:
+          TAG: ${{ github.ref_name }}

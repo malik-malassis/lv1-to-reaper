@@ -5,15 +5,15 @@
       <metadata>
         <link rel="website">https://github.com/malik-malassis/lv1-to-reaper</link>
       </metadata>
-      <version name="2.1.0" author="malik-malassis" time="2026-08-08T22:14:01Z">
-        <changelog><![CDATA[- Track creation and update can no longer leave REAPER's UI refresh
-disabled or an undo block open if they fail partway through.
-- Shift-click a checkbox to select a range of tracks.
-- Warns when the selection needs more hardware inputs than the audio
-device actually provides.
-- Replayed capture files (--mock) are now flagged in the window.]]></changelog>
-        <source main="main">https://github.com/malik-malassis/lv1-to-reaper/raw/2687d910b2184097503710cad67de43ee3069e79/LV1_Track_Importer.lua</source>
-        <source file="lv1_fetch.js">https://github.com/malik-malassis/lv1-to-reaper/raw/2687d910b2184097503710cad67de43ee3069e79/lv1_fetch.js</source>
+      <version name="2.1.1" author="malik-malassis" time="2026-08-09T17:13:54Z">
+        <changelog><![CDATA[- Fixed: with ReaImGui 0.10, which is what any fresh install gets, every
+frame logged two "ImGui_PushFont: expected 3 arguments minimum" errors.
+PushFont changed signature in 0.10 and the script now reads the version
+instead of trying both forms.
+- The ReaImGui version is shown in Settings > Advanced, so a bug report
+carries the one detail that explains this class of problem.]]></changelog>
+        <source main="main">https://github.com/malik-malassis/lv1-to-reaper/raw/fa0bfab054ddc834a51464c0bc2fac8f84aeea3d/LV1_Track_Importer.lua</source>
+        <source file="lv1_fetch.js">https://github.com/malik-malassis/lv1-to-reaper/raw/fa0bfab054ddc834a51464c0bc2fac8f84aeea3d/lv1_fetch.js</source>
       </version>
     </reapack>
   </category>

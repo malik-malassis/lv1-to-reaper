@@ -8,22 +8,11 @@ Built for the live multitrack workflow: fetch, tick what you need, create.
 A 64-channel console goes from "nothing" to a fully named, colored, correctly
 patched REAPER session in about ten seconds.
 
-<!-- TODO: replace with a real screenshot of the window, e.g. docs/screenshot.png -->
-```
-┌──────────────────────────────────────────────────────────────────────────┐
-│ LV1 -> REAPER   ● LV1-CLASSIC 192.168.1.40   [Fetch tracks][Scan][⚙]     │
-├────────────┬─────────────────────────────────────────────────────────────┤
-│ DEVICES    │ [Search...]  ☐ Hide unused   [All][None][Invert]  24/110    │
-│ ● LV1-CLA. │  ☑ ▉ In 1   KICK IN     [Mono│Ster]   1                     │
-│ ○ LV1-B    │  ☑ ▉ In 9   OH          [Mono│Ster]   9/10                  │
-│            │  ☐ ▉ Grp 1  DRUMS       [Mono│Ster]   -                     │
-│ GROUPS     │  ☑ ▉ LR 1   LR          [Mono│Ster]   31/32                 │
-│ ☑ Inputs   │                                                             │
-│ ☐ Groups   │                                                             │
-├────────────┴─────────────────────────────────────────────────────────────┤
-│ 24 tracks | 18 mono, 6 stereo | inputs 1-30   [Update existing][Create]  │
-└──────────────────────────────────────────────────────────────────────────┘
-```
+![The importer after a fetch: 109 channels read from the console, grouped and
+filtered in the sidebar, each row showing its name, mono/stereo width and the
+hardware input it will be patched to. The footer warns in red that the
+selection needs 71 inputs while the audio device only exposes
+64.](docs/tracks.png)
 
 ## It never changes anything on your console
 
@@ -117,15 +106,26 @@ copy the files by hand.
 
 ## Usage
 
-1. **Fetch tracks** — connects and reads the console. With several LV1s on the
-   network, hit **Scan network** first and pick the right one in the sidebar.
-2. Filter with the search box, the group list, or **Hide unused** (which hides
+On first launch nothing is selected yet, so **Scan network** is the lit button
+and **Fetch tracks** is disabled:
+
+![The window on first launch, empty, with Scan network highlighted as the next
+step](docs/window.png)
+
+1. **Scan network** finds every LV1 announcing itself on the LAN. Click yours
+   in the Devices list — it is remembered for the next session.
+
+   ![The Devices list after a scan, showing one console found with its
+   address](docs/scan.png)
+
+2. **Fetch tracks** connects and reads the console.
+3. Filter with the search box, the group list, or **Hide unused** (which hides
    channels still carrying an LV1 factory name like `Channel 12` or `Fx 3`).
-3. Tick what you want — **shift-click a checkbox to tick a whole range**.
+4. Tick what you want — **shift-click a checkbox to tick a whole range**.
    Adjust name, Mono/Stereo or color inline; the **Input** column shows live
    which hardware input each track will land on, and the footer turns red if
    the selection needs more inputs than your audio device actually has.
-4. **Create N tracks**, or **Update existing** to refresh tracks a previous
+5. **Create N tracks**, or **Update existing** to refresh tracks a previous
    run already created.
 
 The blue button is always the next step: **Scan network** until a console is
@@ -139,6 +139,10 @@ stops as soon as the track list and meter frames have arrived, rather than
 always waiting out its full timeout.
 
 ## Import options (Settings → Import)
+
+![The Import tab of the Settings dialog, showing record-input pre-patching with
+its console-accurate and linear modes, the LR record input field, and the
+naming, folder, arming and skip-existing options](docs/settings-import.png)
 
 | Option | What it does |
 |---|---|

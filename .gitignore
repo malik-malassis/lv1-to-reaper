@@ -14,3 +14,7 @@ Thumbs.db
 
 # Local editor configuration
 .vscode/
+
+# Source demo recording - 418 MB, far past GitHub's 100 MB limit.
+# The optimised version lives in docs/ and is committed.
+/demo-lv1-to-reaper.gif

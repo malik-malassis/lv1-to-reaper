@@ -44,24 +44,51 @@ during a soundcheck cannot alter your mix.
 
 ## Before you start
 
-Three things, all free, all one-time.
+Four things, all free, all one-time. Do them in this order.
 
-**1. ReaImGui** - an add-on that lets scripts draw proper windows in REAPER.
+### 1. ReaPack
+
+The add-on manager for REAPER. Everything else installs through it.
+
+**You may already have it:** look at REAPER's menu bar. If there is an
+**Extensions** menu, skip to step 2.
+
+If not:
+
+1. Open [reapack.com](https://reapack.com) and download the file for your
+   computer:
+   - **Windows** (almost everyone): `reaper_reapack-x64.dll`
+   - **Mac, Apple silicon** (M1, M2, M3, M4): `reaper_reapack-arm64.dylib`
+   - **Mac, Intel**: `reaper_reapack-x86_64.dylib`
+   - **Linux**: `reaper_reapack-x86_64.so`
+2. In REAPER: `Options` → `Show REAPER resource path in explorer/finder`.
+   A folder window opens.
+3. Inside it, open the **`UserPlugins`** folder and drop the downloaded file
+   there. If that folder does not exist, create it, with exactly that name.
+4. Close REAPER and start it again. An **Extensions** menu now appears.
+
+> Do not rename the file. REAPER only loads extensions whose name starts with
+> `reaper_`.
+
+### 2. ReaImGui
+
+The add-on that lets scripts draw proper windows. The importer will simply
+refuse to start without it, with a message telling you so.
 
 In REAPER: `Extensions` → `ReaPack` → `Browse packages…` → type `ReaImGui` →
 right-click the one by **cfillion** → `Install` → `OK` → restart REAPER.
 
-> No ReaPack menu? Install it first from [reapack.com](https://reapack.com),
-> then restart REAPER.
+### 3. Node.js
 
-**2. Node.js** - a small free program the importer uses to talk to your console
-over the network. You will never open it yourself.
+A small free program the importer uses to talk to your console over the
+network. You will never open it yourself.
 
-Download it from [nodejs.org](https://nodejs.org/) (the button on the left),
-run the installer, click Next until it finishes.
+Download it from [nodejs.org](https://nodejs.org/) (the big button on the
+left), run the installer, click Next until it finishes.
 
-**3. Your LV1 and your computer on the same network.** Same switch, same
-router. Not through a VPN, not on a different Wi-Fi.
+### 4. Your LV1 and your computer on the same network
+
+Same switch, same router. Not through a VPN, not on a different Wi-Fi.
 
 ---
 

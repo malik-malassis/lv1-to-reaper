@@ -1004,25 +1004,56 @@ end
 
 local ctx = ImGui.CreateContext('LV1 Track Importer')
 
+-- ReaImGui 0.10 made font sizes dynamic: PushFont takes (ctx, font, size),
+-- where 0.9 took (ctx, font). Calling it with the wrong number of arguments
+-- raises a REAPER API error, and REAPER prints those to the console even when
+-- the caller catches them - so the signature is resolved once here, from the
+-- reported version, rather than probed on every frame.
+--
+-- If the version cannot be read, custom fonts are skipped entirely and the
+-- default font is used. Slightly plainer, and guaranteed silent, which beats
+-- guessing on an installation nobody has tested.
+local FONT_SIZE_TITLE, FONT_SIZE_SMALL = 20, 11
 local FONT_TITLE, FONT_SMALL
+local pushFontSize = nil   -- nil = fonts unusable, 0 = (ctx, font), >0 = (ctx, font, size)
+local REAIMGUI_VERSION = '' -- shown in the diagnostics panel
+
 do
-	-- Fonts are optional: ReaImGui changed PushFont's signature across versions
-	-- and a missing font must degrade to the default one, never break the UI.
-	local okT, f = pcall(ImGui.CreateFont, 'sans-serif', 20)
-	if okT and f then
-		if pcall(ImGui.Attach, ctx, f) then FONT_TITLE = f end
+	-- GetVersion returns (dear imgui version, its numeric form, ReaImGui's own
+	-- version); the third is the one that matters. Both call forms are tried
+	-- because the context argument has come and gone between versions.
+	local major, minor
+	local ok, _, _, reaimguiVersion = pcall(function() return ImGui.GetVersion() end)
+	if not ok or type(reaimguiVersion) ~= 'string' then
+		ok, _, _, reaimguiVersion = pcall(function() return ImGui.GetVersion(ctx) end)
 	end
-	local okS, g = pcall(ImGui.CreateFont, 'sans-serif', 11)
-	if okS and g then
-		if pcall(ImGui.Attach, ctx, g) then FONT_SMALL = g end
+	if ok and type(reaimguiVersion) == 'string' then
+		REAIMGUI_VERSION = reaimguiVersion
+		major, minor = reaimguiVersion:match('^(%d+)%.(%d+)')
+	end
+
+	if major then
+		local needsSize = (tonumber(major) > 0) or (tonumber(minor) >= 10)
+		local function make(size)
+			local okF, f = pcall(ImGui.CreateFont, 'sans-serif', size)
+			if okF and f and pcall(ImGui.Attach, ctx, f) then return f end
+			return nil
+		end
+		FONT_TITLE = make(FONT_SIZE_TITLE)
+		FONT_SMALL = make(FONT_SIZE_SMALL)
+		if FONT_TITLE or FONT_SMALL then pushFontSize = needsSize and 1 or 0 end
 	end
 end
 
-local function pushFont(f)
-	if not f then return false end
-	if pcall(ImGui.PushFont, ctx, f) then return true end
-	if pcall(ImGui.PushFont, ctx, f, 0) then return true end
-	return false
+local function pushFont(f, size)
+	if not f or not pushFontSize then return false end
+	local ok
+	if pushFontSize > 0 then
+		ok = pcall(ImGui.PushFont, ctx, f, size or FONT_SIZE_TITLE)
+	else
+		ok = pcall(ImGui.PushFont, ctx, f)
+	end
+	return ok == true
 end
 local function popFont(pushed)
 	if pushed then pcall(ImGui.PopFont, ctx) end
@@ -1173,11 +1204,11 @@ end
 local function drawHeader()
 	local h = 54
 	if ImGui.BeginChild(ctx, 'header', 0, h, E('ChildFlags_Borders', E('ChildFlags_Border', 1))) then
-		local pushed = pushFont(FONT_TITLE)
+		local pushed = pushFont(FONT_TITLE, FONT_SIZE_TITLE)
 		ImGui.TextColored(ctx, COL.text, 'LV1')
 		popFont(pushed)
 		ImGui.SameLine(ctx, 0, 6)
-		local p2 = pushFont(FONT_TITLE)
+		local p2 = pushFont(FONT_TITLE, FONT_SIZE_TITLE)
 		ImGui.TextColored(ctx, COL.accent, '->')
 		ImGui.SameLine(ctx, 0, 6)
 		ImGui.TextColored(ctx, COL.text, 'REAPER')
@@ -1692,6 +1723,10 @@ local function settingsBody()
 			ImGui.Spacing(ctx)
 			ImGui.Separator(ctx)
 			ImGui.Spacing(ctx)
+			-- Worth surfacing: a ReaImGui version difference is exactly the kind
+			-- of thing that produces a bug report nobody can act on.
+			labelledValue('ReaImGui:', REAIMGUI_VERSION ~= '' and REAIMGUI_VERSION or 'unknown',
+				REAIMGUI_VERSION ~= '' and COL.text or COL.warn)
 			labelledValue('Helper:', FETCH_JS)
 			labelledValue('Result:', JSON_OUT)
 			labelledValue('Log:', LOG_OUT)
@@ -1761,7 +1796,7 @@ local function drawDiagnostics()
 		-- it returned true - otherwise the child is double-closed and ImGui
 		-- throws "Calling End() too many times!".
 		if ImGui.BeginChild(ctx, 'log_child', 0, 150, E('ChildFlags_Borders', E('ChildFlags_Border', 1))) then
-			local f = pushFont(FONT_SMALL)
+			local f = pushFont(FONT_SMALL, FONT_SIZE_SMALL)
 			ImGui.TextWrapped(ctx, lastLog ~= '' and lastLog or '(nothing yet - run a fetch first)')
 			popFont(f)
 			ImGui.EndChild(ctx)

@@ -1,6 +1,6 @@
 -- @description LV1 Track Importer - connect to a Waves LV1 mixer and create Reaper tracks
 -- @author Malik MALASSIS - @malik_biendebout
--- @version 2.1.1
+-- @version 2.1.2
 -- @provides
 --   lv1_fetch.js
 -- @links
@@ -24,6 +24,15 @@
 --   OSC codec is used under the MIT License from
 --   bitfocus/companion-module-waves-lv1. See LICENSE.
 -- @changelog
+--   2.1.2
+--   - Node.js is now found automatically in the places it usually lives.
+--     On macOS, REAPER does not inherit the PATH from your terminal, so a
+--     working Node install was invisible to it and every fetch failed with
+--     "the helper never wrote anything".
+--   - The Node path in use is shown in Settings > Connection, and the failure
+--     message now names what was tried instead of guessing.
+--   - The diagnostic list no longer claims a console was "seen on the LAN"
+--     when it was only restored from the saved settings.
 --   2.1.1
 --   - Fixed: with ReaImGui 0.10, which is what any fresh install gets, every
 --     frame logged two "ImGui_PushFont: expected 3 arguments minimum" errors.
@@ -562,7 +571,47 @@ end
 local function quoteArg(s)
 	s = tostring(s)
 	if IS_WIN then return '"' .. s:gsub('"', '') .. '"' end
+	-- Quote only when the value actually needs it. REAPER's ExecProcess does
+	-- not guarantee a shell on every platform, and a bare word wrapped in
+	-- quotes would then be looked up with the quotes as part of the name.
+	if s:match("^[%w@%%_%-%+%=%:%,%./]+$") then return s end
 	return "'" .. s:gsub("'", "'\\''") .. "'"
+end
+
+-- Where Node.js usually lands, per platform. This exists because of macOS: an
+-- application started from the Dock inherits launchd's PATH, which is roughly
+-- /usr/bin:/bin:/usr/sbin:/sbin - and neither Homebrew's directory nor the
+-- official installer's is in it. So `node` works perfectly in Terminal and is
+-- invisible to REAPER, which looks exactly like "the helper never started".
+local NODE_CANDIDATES = IS_WIN and {
+	"C:\\Program Files\\nodejs\\node.exe",
+	"C:\\Program Files (x86)\\nodejs\\node.exe",
+} or {
+	"/opt/homebrew/bin/node",   -- Homebrew on Apple silicon
+	"/usr/local/bin/node",      -- Homebrew on Intel, and the official installer
+	"/opt/local/bin/node",      -- MacPorts
+	"/usr/bin/node",
+	"/snap/bin/node",
+}
+
+-- Resolved once and reused, so the probe does not run on every fetch.
+local resolvedNodePath = nil
+
+-- Returns the executable to run, plus whether it had to be looked up. A path
+-- the user set by hand is always honoured, never second-guessed.
+local function nodePath()
+	local configured = (cfg.nodePath or ""):match("^%s*(.-)%s*$")
+	if configured ~= "" and configured ~= "node" then return configured, false end
+	if resolvedNodePath then return resolvedNodePath, true end
+	for _, candidate in ipairs(NODE_CANDIDATES) do
+		if fileExists(candidate) then
+			resolvedNodePath = candidate
+			return candidate, true
+		end
+	end
+	-- Nothing found: fall back to the bare name and let PATH try, which is
+	-- what works on Windows and on anything launched from a terminal.
+	return "node", false
 end
 
 -- Only ever pass a syntactically valid host to the shell. Anything else is a
@@ -578,7 +627,7 @@ local function buildCommand(kind)
 	local host = sanitizedHost()
 	if host == nil then return nil, "Invalid host: use an IPv4 address (e.g. 192.168.1.40) or a plain hostname." end
 
-	local parts = { quoteArg(cfg.nodePath), quoteArg(FETCH_JS) }
+	local parts = { quoteArg((nodePath())), quoteArg(FETCH_JS) }
 	local function add(...) for _, v in ipairs({...}) do parts[#parts+1] = v end end
 
 	if kind == "scan" then
@@ -791,7 +840,13 @@ local function pollJob()
 		local kind = job.kind
 		job = nil
 		if lastLog == "" then
-			setStatus("error", "Timed out and the helper never wrote anything - Node.js probably didn't start. Check the Node path in Settings, or enable blocking mode there to see the OS error.")
+			local used, autoFound = nodePath()
+			setStatus("error", string.format(
+				"Node.js never started, so nothing could talk to the console. Tried: %s%s. " ..
+				"Install Node.js from nodejs.org, or set its full path in Settings > Connection. " ..
+				"On macOS, REAPER does not see the PATH from your terminal, so the full path is often needed " ..
+				"(usually /opt/homebrew/bin/node or /usr/local/bin/node).",
+				used, autoFound and " (found automatically)" or ""))
 			showSettings = true
 		else
 			setStatus("error", "Timed out waiting for " .. kind .. " to finish. See the diagnostic log below.")
@@ -1651,8 +1706,14 @@ local function settingsBody()
 
 			ImGui.SetNextItemWidth(ctx, 220)
 			changed, val = ImGui.InputText(ctx, 'Node.js executable', cfg.nodePath)
-			if changed then cfg.nodePath = val; setCfg('nodePath', val) end
-			tooltip('"node" works if Node.js is on PATH; otherwise give the full path to node.exe.')
+			if changed then cfg.nodePath = val; setCfg('nodePath', val); resolvedNodePath = nil end
+			tooltip('"node" works when Node.js is on PATH. On macOS it usually is not, as far as REAPER is concerned, so a full path is often needed.')
+			local used, autoFound = nodePath()
+			if autoFound then
+				ImGui.TextColored(ctx, COL.ok, 'Found automatically: ' .. used)
+			elseif used == 'node' then
+				ImGui.TextColored(ctx, COL.warn, 'Not found in the usual places; relying on PATH.')
+			end
 
 			ImGui.Spacing(ctx)
 			ImGui.SetNextItemWidth(ctx, 220)
@@ -1787,9 +1848,14 @@ local function drawDiagnostics()
 	end
 	if ImGui.CollapsingHeader(ctx, 'Diagnostic log') then
 		if #devices > 0 then
-			ImGui.TextColored(ctx, COL.textDim, string.format('LV1(s) seen on the LAN (%d):', #devices))
+			-- "Seen on the LAN" would be a lie for an entry restored from the
+			-- settings, and that distinction is the whole difference between
+			-- "discovery works" and "discovery has never worked here".
+			ImGui.TextColored(ctx, COL.textDim, string.format('Consoles in the list (%d):', #devices))
 			for _, d in ipairs(devices) do
-				ImGui.BulletText(ctx, string.format('%s @ %s:%s', tostring(d.name or d.host), tostring(d.address or '?'), tostring(d.port or '?')))
+				ImGui.BulletText(ctx, string.format('%s @ %s:%s%s',
+					tostring(d.name or d.host), tostring(d.address or '?'), tostring(d.port or '?'),
+					d.seen == false and '   (from your settings, never seen on the network)' or '   (announced itself)'))
 			end
 		else
 			ImGui.TextColored(ctx, COL.textFaint, 'No LV1 announcement seen on the LAN during the last scan.')

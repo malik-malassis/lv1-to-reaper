@@ -250,6 +250,16 @@ Try again - the console changes its connection number every time it restarts,
 and the importer re-detects it automatically on the second try. If it still
 fails, another program may already be connected to the desk as a remote.
 
+**Nothing happens when you click Fetch, or scanning never finds anything, on a
+Mac.**
+This is almost always REAPER not finding Node.js, even when Node works fine in
+Terminal. An app started from the Dock does not get the same `PATH` as your
+terminal, and Node is usually installed somewhere that is not on it. The
+importer now looks in the usual places by itself, and `Settings` →
+`Connection` tells you whether it found one. If it did not, type the full path
+there yourself. To get it, open Terminal and run `which node`; it is usually
+`/opt/homebrew/bin/node` or `/usr/local/bin/node`.
+
 **Nothing happens at all when you click Fetch.**
 Node.js is probably not installed, or REAPER can't find it. Open `Settings` →
 `Connection` and check the Node.js line. Then open `Settings` → `Advanced` and

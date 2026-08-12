@@ -1,6 +1,6 @@
 -- @description LV1 Track Importer - connect to a Waves LV1 mixer and create Reaper tracks
 -- @author Malik MALASSIS - @malik_biendebout
--- @version 2.1.2
+-- @version 2.1.3
 -- @provides
 --   lv1_fetch.js
 -- @links
@@ -24,6 +24,15 @@
 --   OSC codec is used under the MIT License from
 --   bitfocus/companion-module-waves-lv1. See LICENSE.
 -- @changelog
+--   2.1.3
+--   - Fixed the font call for good. PushFont changed signature in ReaImGui
+--     0.10, but what decides it is the API in use, not the version on disk:
+--     the module is pinned to 0.9, so it keeps the old shape even on 0.10.
+--     Reading the version alone broke it the other way round for module
+--     users ("ImGui__shim: expected 2 arguments maximum").
+--   - If the font call fails anyway, custom fonts are dropped for the rest
+--     of the session instead of erroring on every frame.
+--   - Diagnostics show which ReaImGui API is in use, not just its version.
 --   2.1.2
 --   - Node.js is now found automatically in the places it usually lives.
 --     On macOS, REAPER does not inherit the PATH from your terminal, so a
@@ -104,6 +113,8 @@ if not reaper.ImGui_CreateContext and not reaper.ImGui_GetBuiltinPath then
 	return
 end
 
+local USING_IMGUI_MODULE = false
+
 local ImGui
 do
 	local raw
@@ -112,7 +123,15 @@ do
 		if okPath and builtin then
 			package.path = builtin .. "/?.lua;" .. package.path
 			local okReq, mod = pcall(function() return require 'imgui' '0.9' end)
-			if okReq and type(mod) == "table" then raw = mod end
+			if okReq and type(mod) == "table" then
+				raw = mod
+				-- Remember which API surface won. It decides the signature of
+				-- the calls that changed between 0.9 and 0.10: the module is
+				-- pinned to '0.9' above, so it keeps serving the 0.9 shapes
+				-- however new the installed ReaImGui is, while the flat
+				-- fallback exposes whatever the installed version natively has.
+				USING_IMGUI_MODULE = true
+			end
 		end
 	end
 	if not raw then
@@ -1095,7 +1114,13 @@ do
 	end
 
 	if major then
-		local needsSize = (tonumber(major) > 0) or (tonumber(minor) >= 10)
+		-- PushFont gained a size argument in ReaImGui 0.10. But what matters is
+		-- the API surface actually in use, not the version on disk: when the
+		-- module is loaded it is pinned to '0.9' above, so its shim still wants
+		-- the two-argument form even on 0.10.3. Reading the version alone gets
+		-- this exactly backwards for module users.
+		local needsSize = (not USING_IMGUI_MODULE)
+			and ((tonumber(major) > 0) or (tonumber(minor) >= 10))
 		local function make(size)
 			local okF, f = pcall(ImGui.CreateFont, 'sans-serif', size)
 			if okF and f and pcall(ImGui.Attach, ctx, f) then return f end
@@ -1115,7 +1140,16 @@ local function pushFont(f, size)
 	else
 		ok = pcall(ImGui.PushFont, ctx, f)
 	end
-	return ok == true
+	if not ok then
+		-- Whatever the reason, give up on custom fonts for the rest of the
+		-- session rather than retrying every frame. REAPER prints API errors
+		-- to its console even when they are caught, so a wrong guess here would
+		-- otherwise scroll past hundreds of times a minute. The window keeps
+		-- working, just with the default font.
+		pushFontSize = nil
+		return false
+	end
+	return true
 end
 local function popFont(pushed)
 	if pushed then pcall(ImGui.PopFont, ctx) end
@@ -1793,7 +1827,7 @@ local function settingsBody()
 			ImGui.Spacing(ctx)
 			-- Worth surfacing: a ReaImGui version difference is exactly the kind
 			-- of thing that produces a bug report nobody can act on.
-			labelledValue('ReaImGui:', REAIMGUI_VERSION ~= '' and REAIMGUI_VERSION or 'unknown',
+			labelledValue('ReaImGui:', (REAIMGUI_VERSION ~= '' and REAIMGUI_VERSION or 'unknown') .. (USING_IMGUI_MODULE and '  (module API)' or '  (legacy API)'),
 				REAIMGUI_VERSION ~= '' and COL.text or COL.warn)
 			labelledValue('Helper:', FETCH_JS)
 			labelledValue('Result:', JSON_OUT)
